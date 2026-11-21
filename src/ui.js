@@ -1,11 +1,11 @@
 // CFOP Trainer — interfaz
 const L = Logic;
-const VERSION = '1.0.1 · etapa 1';
+const VERSION = '2.0';
 const STORE = 'cfop.v1';
 
 // ---------- datos
 function defaultDb() {
-  return { v: 1, notation: {}, quizzes: [], solves: [], settings: { inspection: false, speed: 1 } };
+  return { v: 1, notation: {}, quizzes: [], solves: [], cases: {}, cross: [], settings: { inspection: false, speed: 1 } };
 }
 let db = load();
 function load() {
@@ -23,6 +23,8 @@ function normalize(d) {
     notation: d.notation && typeof d.notation === 'object' ? d.notation : {},
     quizzes: Array.isArray(d.quizzes) ? d.quizzes : [],
     solves: Array.isArray(d.solves) ? d.solves.filter(s => s && typeof s.ms === 'number') : [],
+    cases: d.cases && typeof d.cases === 'object' ? d.cases : {},
+    cross: Array.isArray(d.cross) ? d.cross.filter(x => x && typeof x.ms === 'number') : [],
     settings: Object.assign(base.settings, d.settings || {}),
   };
 }
@@ -30,7 +32,8 @@ function save() { try { localStorage.setItem(STORE, JSON.stringify(db)); } catch
 
 // ---------- estado temporal
 const ui = {
-  tab: 'aprender', sub: null, from: null,
+  tab: 'aprender', sub: null, stack: [],
+  set: 'f2l', setFilter: 'todos', caseId: null, pi: 0, playing: false, tr: null, cx: null, cxLvl: 'todas',
   nota: { move: 'R', suf: '' },
   quizCfg: { mode: 'ver', pool: 'caras', n: 20 },
   quiz: null,
@@ -67,6 +70,11 @@ const IC = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  first: '<path d="M6 5v14"/><path d="M18 5l-7 7 7 7"/>',
+  last: '<path d="M18 5v14"/><path d="M6 5l7 7-7 7"/>',
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/>',
+  minus: '<path d="M5 12h14"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
   cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
 };
 const ic = (n, s = 22, sw = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
@@ -98,11 +106,19 @@ function nav(fn, dir) {
     t.finished.finally(() => { delete document.documentElement.dataset.nav; });
   } else run();
 }
-function go(sub) { nav(() => { ui.from = ui.sub; ui.sub = sub; window.scrollTo(0, 0); }, 'push'); }
-function back(to = null) { nav(() => { ui.sub = to; ui.quiz = null; window.scrollTo(0, 0); }, 'pop'); }
+function go(sub) { nav(() => { ui.stack.push(ui.sub); ui.sub = sub; window.scrollTo(0, 0); }, 'push'); }
+function back() {
+  nav(() => {
+    const leaving = ui.sub;
+    ui.sub = ui.stack.length ? ui.stack.pop() : null;
+    if (leaving === 'quiz') ui.quiz = null;
+    if (leaving === 'case') ui.playing = false;
+    window.scrollTo(0, 0);
+  }, 'pop');
+}
 function setTab(t) {
   if (t === ui.tab && !ui.sub) return;
-  nav(() => { ui.tab = t; ui.sub = null; ui.quiz = null; window.scrollTo(0, 0); }, null);
+  nav(() => { ui.tab = t; ui.sub = null; ui.stack = []; ui.quiz = null; ui.playing = false; window.scrollTo(0, 0); }, null);
 }
 
 // ---------- toast y diálogos
@@ -163,35 +179,46 @@ function navbar(label, right = '') {
   return `<div class="nav"><button class="btn ghost" data-act="back">${ic('back', 22)}${esc(label)}</button><span class="muted small num">${right}</span></div>`;
 }
 
-function viewHome() {
+function routeRows() {
   const n = masteredCount(), total = FACE_VARIANTS.length;
-  const stages = [
-    { id: 'nota', ab: 'Aa', col: '#8E8E93', name: 'Notación', sub: 'R, U′, F2… y giros del cubo', prog: `${n} de ${total}`, pct: n / total * 100, ready: true, done: notationDone() },
-    { ab: '+', col: '#FFFFFF', name: 'Cross', sub: 'La cruz blanca, intuitiva' },
-    { ab: 'F2L', col: '#30D158', name: 'F2L', sub: '41 casos' },
-    { ab: 'O2', col: '#FFD60A', name: 'OLL en 2 pasos', sub: '10 algoritmos' },
-    { ab: 'P2', col: '#FF9F0A', name: 'PLL en 2 pasos', sub: '6 algoritmos' },
-    { ab: 'OLL', col: '#FFD60A', name: 'OLL completo', sub: '57 casos', locked: true },
-    { ab: 'PLL', col: '#FF9F0A', name: 'PLL completo', sub: '21 casos', locked: true },
-  ];
-  const rows = stages.map(s => {
-    if (s.ready) return `<button class="li" data-act="go" data-v="nota"><span class="badge" style="background:${s.col}">${s.ab}</span>
-      <span class="grow"><span class="row"><span style="font-weight:600">${s.name}</span><span class="sub num">${s.prog}</span></span><span class="bar"><i style="width:${s.pct}%"></i></span></span>
-      <span class="chev" style="${s.done ? 'color:var(--green)' : ''}">${ic(s.done ? 'check' : 'chev', 20, s.done ? 2.2 : 1.8)}</span></button>`;
-    return `<div class="li" aria-disabled="true"><span class="badge off">${s.ab}</span>
-      <span class="grow"><span style="font-weight:600;color:var(--muted)">${s.name}</span><span class="sub">${s.locked ? 'Se abre al dominar la versión en 2 pasos' : s.sub + ' · próxima versión'}</span></span>
-      <span class="chev">${s.locked ? ic('lock', 18) : ''}</span></div>`;
-  }).join('');
-  const cont = notationDone()
-    ? `<p class="eyebrow">Notación lista</p><h2>Dominaste los 18 giros de caras</h2><span class="muted small">Sigue practicando las capas del medio y los giros del cubo. Cross llega en la próxima versión.</span><button class="btn primary" data-act="go" data-v="quiz">Practicar notación</button>`
-    : `<p class="eyebrow">Continuar</p><div class="row"><div class="col"><h2>Notación</h2><span class="muted small">Aprende a leer los algoritmos</span></div><span class="muted small num">${n} de ${total}</span></div><button class="btn primary" data-act="go" data-v="nota">Seguir aprendiendo</button>`;
+  const crossN = db.cross.length;
+  const rows = [`<button class="li" data-act="go" data-v="nota"><span class="badge" style="background:#8E8E93">Aa</span>
+      <span class="grow"><span class="row"><span style="font-weight:600">Notación</span><span class="sub num">${n} de ${total}</span></span><span class="bar"><i style="width:${n / total * 100}%"></i></span></span>
+      <span class="chev" style="${notationDone() ? 'color:var(--green)' : ''}">${ic(notationDone() ? 'check' : 'chev', 20, notationDone() ? 2.2 : 1.8)}</span></button>`,
+    `<button class="li" data-act="go" data-v="crossinfo"><span class="badge" style="background:#fff">+</span>
+      <span class="grow"><span class="row"><span style="font-weight:600">Cross</span><span class="sub num">${crossN ? crossN + (crossN === 1 ? ' cruz' : ' cruces') : 'Intuitiva'}</span></span><span class="bar"><i style="width:${Math.min(100, crossN / 50 * 100)}%"></i></span></span>
+      <span class="chev">${ic('chev', 20)}</span></button>`];
+  for (const set of SET_ORDER) {
+    const info = SETS[set], tot = casesOf(set).length, m = masteredIn(set), lr = learningIn(set);
+    const rec = (set === 'oll' && masteredIn('oll2') < 10) || (set === 'pll' && masteredIn('pll2') < 6);
+    rows.push(`<button class="li" data-act="openSet" data-v="${set}"><span class="badge" style="background:${info.col}">${info.badge}</span>
+      <span class="grow"><span class="row"><span style="font-weight:600">${info.title}</span><span class="sub num">${m} de ${tot}</span></span>
+      ${rec && !m && !lr ? `<span class="sub">Recomendado después de ${set === 'oll' ? 'OLL' : 'PLL'} en 2 pasos</span>` : `<span class="bar"><i style="width:${m / tot * 100}%"></i></span>`}</span>
+      <span class="chev" style="${m === tot ? 'color:var(--green)' : ''}">${ic(m === tot ? 'check' : 'chev', 20, m === tot ? 2.2 : 1.8)}</span></button>`);
+  }
+  return rows.join('');
+}
+function nextStep() {
+  if (!notationDone()) return { t: 'Notación', s: `${masteredCount()} de 18 giros dominados`, act: 'go', v: 'nota', b: 'Seguir aprendiendo' };
+  if (db.cross.length < 20) return { t: 'Cross', s: 'Practica la cruz hasta que salga sola', act: 'go', v: 'crossinfo', b: 'Practicar la cruz' };
+  for (const set of ['f2l', 'oll2', 'pll2', 'oll', 'pll']) {
+    const pend = casesOf(set).find(c => stOf(c.id) === 'por aprender');
+    if (pend && (learningIn(set) < 4)) return { t: SETS[set].title, s: `Siguiente: ${pend.name}`, act: 'openCase', v: pend.id, b: 'Aprender este caso' };
+    if (masteredIn(set) < casesOf(set).length && set !== 'oll' && set !== 'pll') return { t: SETS[set].title, s: `${learningIn(set)} casos en práctica`, act: 'openSet', v: set, b: 'Practicar' };
+  }
+  return { t: 'Todo listo', s: 'Sigue repasando y bajando tus tiempos', act: 'tab', v: 'crono', b: 'Ir al cronómetro' };
+}
+function viewHome() {
+  const nx = nextStep(), due = allDue().length;
   return `<div class="screen">
     <p class="eyebrow">CFOP Trainer</p>
     <h1>Aprender</h1>
-    <div class="card">${cont}</div>
+    <div class="card"><p class="eyebrow">Continuar</p>
+      <div class="col"><h2>${esc(nx.t)}</h2><span class="muted small">${esc(nx.s)}</span></div>
+      <button class="btn primary" data-act="${nx.act}" data-v="${nx.v}">${esc(nx.b)}</button>
+      ${due ? `<button class="btn tint" data-act="review">${ic('replay', 20)}Repaso de hoy · ${due} ${due === 1 ? 'caso' : 'casos'}</button>` : ''}</div>
     <p class="eyebrow">Tu ruta</p>
-    <div class="list">${rows}</div>
-    <p class="muted small">Esta primera versión trae la notación y el cronómetro. Cross, F2L, OLL y PLL llegan en las próximas.</p>
+    <div class="list">${routeRows()}</div>
   </div>${tabbar()}`;
 }
 
@@ -329,21 +356,24 @@ function viewQuiz() {
 
 function viewTrain() {
   const last = db.quizzes[db.quizzes.length - 1];
-  const soon = (ab, col, name, sub) => `<div class="li" aria-disabled="true"><span class="badge off">${ab}</span><span class="grow" style="gap:2px"><span style="font-weight:600;color:var(--muted)">${name}</span><span class="sub">${sub} · próxima versión</span></span></div>`;
+  const due = allDue();
+  const cs = crossStats();
+  const row = (act, v, ab, col, name, sub, right = '') => `<button class="li" data-act="${act}" data-v="${v}"><span class="badge" style="background:${col}">${ab}</span><span class="grow" style="gap:2px"><span style="font-weight:600">${name}</span><span class="sub">${sub}</span></span><span class="sub num">${right}</span><span class="chev">${ic('chev', 18)}</span></button>`;
+  const setRow = set => { const l = learningIn(set) + masteredIn(set), d = dueIn(set); return row('openSet', set, SETS[set].badge, SETS[set].col, SETS[set].title, l ? `${l} en práctica${d ? ` · ${d} para hoy` : ''}` : 'Ningún caso en práctica aún'); };
   return `<div class="screen">
     <p class="eyebrow">CFOP Trainer</p>
     <h1>Entrenar</h1>
     <div class="card">
-      <p class="eyebrow">Notación</p>
-      <div class="row"><div class="col"><h2 class="num">${masteredCount()} de 18</h2><span class="muted small">giros de caras dominados${last ? ` · última ronda ${last.ok}/${last.total}` : ''}</span></div></div>
-      <button class="btn primary" data-act="go" data-v="quiz">Practicar notación</button>
+      <p class="eyebrow">Repaso de hoy</p>
+      ${due.length ? `<div class="col"><h2 class="num">${due.length} ${due.length === 1 ? 'caso' : 'casos'}</h2><span class="muted small">${SET_ORDER.filter(s => dueIn(s)).map(s => `${dueIn(s)} de ${SETS[s].title}`).join(' · ')}</span></div>
+        <button class="btn primary" data-act="review">Empezar repaso</button>`
+      : `<span class="muted" style="font-size:15px">No tienes repasos pendientes. Marca casos como "Aprendiendo" en Aprender y aparecerán aquí cuando toque repasarlos.</span>`}
     </div>
     <p class="eyebrow">Por etapa</p>
     <div class="list">
-      ${soon('+', '#fff', 'Cross', 'Mezcla real, inspección y solución más corta')}
-      ${soon('F2L', '#30D158', 'F2L', 'Casos con repetición espaciada')}
-      ${soon('OLL', '#FFD60A', 'OLL', 'Primero en 2 pasos')}
-      ${soon('PLL', '#FF9F0A', 'PLL', 'Primero en 2 pasos')}
+      ${row('goCross', '', '+', '#fff', 'Cross', 'Mezcla real, inspección y solución más corta', cs ? L.fmtTime(cs.ms) : '')}
+      ${SET_ORDER.map(setRow).join('')}
+      ${row('go', 'quiz', 'Aa', '#8E8E93', 'Notación', `${masteredCount()} de 18 giros dominados`, last ? `${last.ok}/${last.total}` : '')}
     </div>
     <button class="btn tint" data-act="tab" data-v="crono">${ic('timer', 20)}Ir al cronómetro</button>
   </div>${tabbar()}`;
@@ -415,6 +445,11 @@ function render(animate = false, dir = null) {
   let html;
   if (ui.sub === 'nota') html = viewNotation();
   else if (ui.sub === 'quiz') html = viewQuiz();
+  else if (ui.sub === 'set') html = viewSet();
+  else if (ui.sub === 'case') html = viewCase();
+  else if (ui.sub === 'train') html = viewTrainer();
+  else if (ui.sub === 'crossinfo') html = viewCrossInfo();
+  else if (ui.sub === 'cross') html = viewCross();
   else if (ui.tab === 'aprender') html = viewHome();
   else if (ui.tab === 'entrenar') html = viewTrain();
   else if (ui.tab === 'crono') html = viewCrono();
@@ -428,7 +463,7 @@ function render(animate = false, dir = null) {
   }
   lastScreenKey = key;
   const mount = $('#cubeMount');
-  if (mount) mount.prepend(getCube().el);
+  if (mount) { mount.prepend(getCube().el); setupCubeFor(); }
 }
 
 // ---------- acciones
@@ -467,14 +502,15 @@ const actions = {
     if (v === 'nota') setTimeout(playNotation, 450);
   },
   back: () => {
-    if (ui.sub === 'quiz' && ui.quiz && ui.quiz.i < ui.quiz.qs.length && ui.quiz.i > 0) {
-      ask({ title: '¿Salir de la práctica?', text: 'Lo que respondiste ya quedó guardado.', buttons: [{ label: 'Salir', kind: 'primary', val: 1 }, { label: 'Seguir practicando', val: 0 }] })
-        .then(v => { if (v) back(ui.sub === 'quiz' && ui.from === 'nota' ? 'nota' : null); });
+    const q = ui.quiz, t = ui.tr;
+    const midQuiz = ui.sub === 'quiz' && q && q.i < q.qs.length && q.i > 0;
+    const midTrain = ui.sub === 'train' && t && t.phase !== 'done' && t.i > 0;
+    if (midQuiz || midTrain) {
+      ask({ title: midQuiz ? '¿Salir de la práctica?' : '¿Salir del entrenamiento?', text: 'Lo que ya respondiste quedó guardado.', buttons: [{ label: 'Salir', kind: 'primary', val: 1 }, { label: 'Seguir', val: 0 }] })
+        .then(v => { if (v) back(); });
       return;
     }
-    const to = ui.sub === 'quiz' && ui.from === 'nota' ? 'nota' : null;
-    if (to === 'nota') ui.from = null;
-    back(to);
+    back();
   },
   pickMove: el => { ui.nota.move = el.dataset.v; render(); playNotation(); },
   pickSuf: el => { ui.nota.suf = el.dataset.v; render(); playNotation(); },
@@ -502,8 +538,8 @@ const actions = {
   study: el => {
     const m = L.parseMove(el.dataset.v);
     ui.nota.move = m.base; ui.nota.suf = m.turns === -1 ? "'" : m.turns === 2 ? '2' : '';
-    ui.quiz = null; ui.from = 'quiz';
-    nav(() => { ui.sub = 'nota'; window.scrollTo(0, 0); }, 'push');
+    ui.quiz = null;
+    nav(() => { ui.stack.push(ui.sub); ui.sub = 'nota'; window.scrollTo(0, 0); }, 'push');
     setTimeout(playNotation, 450);
   },
   newScr: () => { ui.scr = L.scramble(); render(); },
@@ -550,9 +586,9 @@ const actions = {
     const v = await ask({ title: '¿Borrar todos los datos?', text: 'Se borra tu avance, tus prácticas y tus tiempos de este teléfono.', buttons: [{ label: 'Exportar respaldo primero', kind: 'primary', val: 'exp' }, { label: 'Borrar todo', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
     if (v === 'exp') { actions.export(); return; }
     if (!v) return;
-    const v2 = await ask({ title: '¿Seguro?', text: `Se perderán ${db.solves.length} tiempos y el avance de ${Object.keys(db.notation).length} giros. No se puede deshacer.`, buttons: [{ label: 'Sí, borrar todo', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    const v2 = await ask({ title: '¿Seguro?', text: `Se perderán ${db.solves.length} tiempos, ${db.cross.length} cruces y el avance de ${Object.keys(db.cases).length} casos y ${Object.keys(db.notation).length} giros. No se puede deshacer.`, buttons: [{ label: 'Sí, borrar todo', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
     if (!v2) return;
-    db = defaultDb(); save(); render(); toast('Datos borrados');
+    db = defaultDb(); save(); ui.tr = null; ui.cx = null; render(); toast('Datos borrados');
   },
 };
 
@@ -574,7 +610,7 @@ async function importFile(input) {
     const d = JSON.parse(await f.text());
     if (!d || d.v !== 1) throw new Error('formato');
     const nd = normalize(d);
-    const v = await ask({ title: '¿Importar este respaldo?', text: `Trae ${nd.solves.length} tiempos y el avance de ${Object.keys(nd.notation).length} giros. Reemplaza lo que hay en este teléfono.`, buttons: [{ label: 'Importar', kind: 'primary', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    const v = await ask({ title: '¿Importar este respaldo?', text: `Trae ${nd.solves.length} tiempos, ${nd.cross.length} cruces y el avance de ${Object.keys(nd.cases).length} casos. Reemplaza lo que hay en este teléfono.`, buttons: [{ label: 'Importar', kind: 'primary', val: 1 }, { label: 'Cancelar', val: 0 }] });
     if (v) { db = nd; save(); render(); toast('Respaldo importado'); }
   } catch (_) { toast('Ese archivo no es un respaldo válido'); }
   input.value = '';
@@ -696,7 +732,7 @@ document.addEventListener('keydown', e => {
 });
 
 // respuesta al tocar
-const PRESS = '.btn,.iconbtn,.chip,.tabbar button,.li,.seg button';
+const PRESS = '.btn,.iconbtn,.chip,.tabbar button,.li,.seg button,.thumb';
 let pressed = null, px = 0, py = 0;
 document.addEventListener('pointerdown', e => {
   const el = e.target.closest(PRESS);
@@ -711,6 +747,7 @@ document.addEventListener('pointerup', release);
 document.addEventListener('pointercancel', release);
 
 // arranque
+Object.assign(actions, actions2);
 render();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});

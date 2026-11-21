@@ -2,8 +2,10 @@
 class Cube3D {
   constructor(opts = {}) {
     this.S = opts.size || 52;
-    this.rx = -28; this.ry = -36;
+    this.rx0 = -28; this.ry0 = -36;
+    this.rx = this.rx0; this.ry = this.ry0;
     this.speed = 1;
+    this.mask = null;
     this.state = Logic.solved();
     this.token = 0;
     this.el = document.createElement('div');
@@ -48,15 +50,17 @@ class Cube3D {
     if (smooth) {
       // primero se normaliza el giro (sin animar) para volver por el camino más corto
       this.scene.style.transition = 'none';
-      this.ry = ((this.ry + 36) % 360 + 540) % 360 - 180 - 36;
+      this.ry = ((this.ry - this.ry0) % 360 + 540) % 360 - 180 + this.ry0;
       this.applyView();
       void this.scene.offsetWidth;
       this.scene.style.transition = 'transform .45s cubic-bezier(.2,.9,.25,1)';
       clearTimeout(this._tv);
       this._tv = setTimeout(() => { this.scene.style.transition = ''; }, 500);
     }
-    this.rx = -28; this.ry = -36; this.applyView();
+    this.rx = this.rx0; this.ry = this.ry0; this.applyView();
   }
+  // vista base: desde arriba (normal) o desde abajo (para ver la cruz blanca)
+  setBaseView(rx, ry, smooth = false) { this.rx0 = rx; this.ry0 = ry; this.resetView(smooth); }
 
   bindDrag() {
     let sx = 0, sy = 0, rx0 = 0, ry0 = 0, id = null, lastTap = 0;
@@ -81,14 +85,15 @@ class Cube3D {
 
   paint() {
     for (const k in this.cubies) for (const n in this.cubies[k].faces) this.cubies[k].faces[n].style.background = 'transparent';
-    for (const s of this.state) {
+    const cols = this.mask ? Logic.maskedColors(this.state, this.mask) : null;
+    this.state.forEach((s, i) => {
       const c = this.cubies[s.p.join(',')];
-      if (c) c.faces[s.n.join(',')].style.background = Logic.COLORS[s.c];
-    }
+      if (c) c.faces[s.n.join(',')].style.background = cols ? cols[i] : Logic.COLORS[s.c];
+    });
   }
 
-  setState(st) { this.token++; this.state = st; this.resetTransforms(); this.paint(); }
-  reset() { this.setState(Logic.solved()); }
+  setState(st, mask) { this.token++; if (mask !== undefined) this.mask = mask; this.state = st; this.resetTransforms(); this.paint(); }
+  reset() { this.setState(Logic.solved(), null); }
   stop() { this.token++; this.resetTransforms(); }
 
   resetTransforms() { for (const k in this.cubies) this.cubies[k].el.style.transform = this.cubies[k].base; }

@@ -1,5 +1,5 @@
 // Red primero; si no hay señal, se usa la copia guardada.
-const CACHE = 'cfop-20261121141410';
+const CACHE = 'cfop-20261121143731';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

@@ -58,3 +58,44 @@ for (let i = 0; i < 100; i++) {
   assert.strictEqual(o.length, 4); assert(o.includes("R'")); assert.strictEqual(new Set(o).size, 4);
 }
 console.log('OK: todas las pruebas pasaron');
+
+// ---- etapas 2-4
+const CASES = require('../src/cases.js');
+const counts = {}; for (const c of CASES) counts[c.set] = (counts[c.set] || 0) + 1;
+assert.deepStrictEqual(counts, { f2l: 41, oll: 57, oll2: 10, pll: 21, pll2: 6 });
+assert.strictEqual(new Set(CASES.map(c => c.id)).size, CASES.length);
+for (const c of CASES) {
+  const st = L.caseSetup(c).state;
+  assert(L.centersHome(st), 'centros ' + c.id);
+  assert(L.isSolved(L.applyAlg(st, L.caseSetup(c).full)), 'el algoritmo resuelve ' + c.id);
+  assert(!L.isSolved(st), 'no está resuelto ' + c.id);
+  assert(L.caseSVG(c).startsWith('<svg'));
+}
+// cruz
+let t0 = Date.now(); L.CROSS.build(); const ms = Date.now() - t0;
+const st = L.applyAlg(S, "U' F U' R' U' B2 D' L F' D' B2 D L B2 D2 R L2 D B2 U2");
+assert.strictEqual(L.CROSS.optimal(st), 5);
+const sols = L.CROSS.solutions(st, 3);
+assert(sols.includes("U' R2 D R' F"), sols.join('|'));
+for (const sol of sols) {
+  const after = L.applyAlg(st, sol);
+  for (const s of after) if (s.p[1] === -1 && (s.p[0] === 0) !== (s.p[2] === 0) || (s.p[1] === -1 && s.p[0] === 0 && s.p[2] === 0)) {}
+  const cross = after.filter(s => s.c === 'D' && s.p[1] === -1 && (s.p[0] === 0 || s.p[2] === 0));
+  assert.strictEqual(cross.length, 5, 'cruz blanca abajo con ' + sol);
+}
+for (const lv of ['facil', 'normal', 'dificil']) { const r = L.crossScramble(lv); assert(lv === 'facil' ? r.opt <= 4 : lv === 'normal' ? r.opt >= 5 && r.opt <= 6 : r.opt >= 7); }
+// repetición espaciada
+let rec = L.srUpdate(null, true, 0); assert.strictEqual(rec.box, 1); assert.strictEqual(rec.due, L.BOX_DAYS[1] * 86400000);
+rec = L.srUpdate(rec, false, 0); assert.strictEqual(rec.box, 0);
+for (let i = 0; i < 5; i++) rec = L.srUpdate(rec, true, 0);
+assert.strictEqual(rec.st, 'dominado');
+for (const c of CASES) for (const u of [0, 1, 2, 3]) {
+  const ps = L.practiceSetup(c, u);
+  assert(!/[xyz]/.test(ps.moves), 'sin giros ' + c.id);
+  const st0 = L.applyAlg(L.solved(), ps.moves);
+  assert(L.centersHome(st0));
+  if (!u && true) assert(L.sameState(st0, L.caseSetup(c).state), 'setup = caso ' + c.id);
+  assert(L.isSolved(L.applyAlg(st0, (ps.pre ? ps.pre + ' ' : '') + L.caseSetup(c).full)), 'resuelve tras setup ' + c.id + ' ' + u);
+}
+assert.strictEqual(L.stripRotations("y R"), 'B');
+console.log('OK etapas 2-4 · tabla de la cruz en', ms, 'ms');

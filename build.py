@@ -12,7 +12,7 @@ def build_html(pwa=True):
             '<link rel="apple-touch-icon" href="icon-180.png">\n'
             '<link rel="icon" type="image/png" href="icon-192.png">') if pwa else ''
     html = html.replace('<!--PWA-->', head)
-    for ph, f in [('/*CSS*/', 'styles.css'), ('/*LOGIC*/', 'logic.js'), ('/*CUBE3D*/', 'cube3d.js'), ('/*UI*/', 'ui.js')]:
+    for ph, f in [('/*CSS*/', 'styles.css'), ('/*LOGIC*/', 'logic.js'), ('/*CASES*/', 'cases.js'), ('/*CUBE3D*/', 'cube3d.js'), ('/*CASESUI*/', 'cases-ui.js'), ('/*UI*/', 'ui.js')]:
         html = html.replace(ph, read(f))
     return html
 
