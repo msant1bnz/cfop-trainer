@@ -44,15 +44,28 @@ class Cube3D {
   }
 
   applyView() { this.scene.style.transform = `rotateX(${this.rx}deg) rotateY(${this.ry}deg)`; }
-  resetView() { this.rx = -28; this.ry = -36; this.applyView(); }
+  resetView(smooth = false) {
+    if (smooth) {
+      // primero se normaliza el giro (sin animar) para volver por el camino más corto
+      this.scene.style.transition = 'none';
+      this.ry = ((this.ry + 36) % 360 + 540) % 360 - 180 - 36;
+      this.applyView();
+      void this.scene.offsetWidth;
+      this.scene.style.transition = 'transform .45s cubic-bezier(.2,.9,.25,1)';
+      clearTimeout(this._tv);
+      this._tv = setTimeout(() => { this.scene.style.transition = ''; }, 500);
+    }
+    this.rx = -28; this.ry = -36; this.applyView();
+  }
 
   bindDrag() {
     let sx = 0, sy = 0, rx0 = 0, ry0 = 0, id = null, lastTap = 0;
     this.el.addEventListener('pointerdown', e => {
+      this.scene.style.transition = '';
       id = e.pointerId; sx = e.clientX; sy = e.clientY; rx0 = this.rx; ry0 = this.ry;
       try { this.el.setPointerCapture(id); } catch (_) {}
       const now = Date.now();
-      if (now - lastTap < 300) this.resetView();
+      if (now - lastTap < 300) this.resetView(true);
       lastTap = now;
     });
     this.el.addEventListener('pointermove', e => {

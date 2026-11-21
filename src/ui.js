@@ -1,6 +1,6 @@
 // CFOP Trainer — interfaz
 const L = Logic;
-const VERSION = '1.0 · etapa 1';
+const VERSION = '1.0.1 · etapa 1';
 const STORE = 'cfop.v1';
 
 // ---------- datos
@@ -208,9 +208,9 @@ function viewNotation() {
     ${navbar(ui.tab === 'aprender' ? 'Aprender' : 'Volver')}
     <h1>Notación</h1>
     <div class="card" style="gap:12px;padding-top:8px">
-      <div class="cubebox" id="cubeMount"><span class="cube-hint">Arrastra para girar · doble toque para centrar</span></div>
+      <div class="cubebox" id="cubeMount"><span class="cube-hint">Arrastra para girar · ↻ vuelve a la vista original</span></div>
       <div class="row" style="align-items:flex-end"><div style="display:flex;align-items:baseline;gap:12px"><b class="bigmove alg">${pretty(full)}</b><span class="muted">${esc(name)}</span></div>
-        <button class="iconbtn" style="background:var(--card2)" data-act="replay" aria-label="Repetir el giro">${ic('replay', 22)}</button></div>
+        <button class="iconbtn" style="background:var(--card2)" data-act="replay" aria-label="Volver a la vista original y repetir el giro">${ic('replay', 22)}</button></div>
       <div class="seg" role="group" aria-label="Variante">
         <button class="${suf === '' ? 'on' : ''}" data-act="pickSuf" data-v="">${move}</button>
         <button class="${suf === "'" ? 'on' : ''}" data-act="pickSuf" data-v="'">${move}′ al revés</button>
@@ -432,10 +432,11 @@ function render(animate = false, dir = null) {
 }
 
 // ---------- acciones
-function playNotation() {
+function playNotation(resetView = false) {
   const c = getCube();
   c.reset();
-  setTimeout(() => c.play(ui.nota.move + ui.nota.suf), 120);
+  if (resetView) c.resetView(true);
+  setTimeout(() => c.play(ui.nota.move + ui.nota.suf), resetView ? 480 : 120);
 }
 function quizShow() {
   const q = ui.quiz; if (!q) return;
@@ -477,7 +478,7 @@ const actions = {
   },
   pickMove: el => { ui.nota.move = el.dataset.v; render(); playNotation(); },
   pickSuf: el => { ui.nota.suf = el.dataset.v; render(); playNotation(); },
-  replay: () => playNotation(),
+  replay: () => playNotation(true),
   cfg: el => { const k = el.dataset.k; ui.quizCfg[k] = k === 'n' ? +el.dataset.v : el.dataset.v; render(); },
   startQuiz: () => { startQuiz(); render(); if (ui.quiz.mode === 'ver') quizShow(); },
   quizSetup: () => { ui.quiz = null; render(); },
