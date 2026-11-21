@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CFOP">
+<title>CFOP Trainer</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{
+  --bg:#000; --card:#1C1C1E; --card2:#2C2C2E; --line:#2C2C2E; --line2:#3A3A3C;
+  --text:#fff; --muted:#8E8E93; --dim:#636366;
+  --accent:#0A84FF; --accent-ink:#000; --gold:#FF9F0A; --red:#FF453A; --green:#30D158;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:17px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.num{font-variant-numeric:tabular-nums}
+.alg{font-weight:600;letter-spacing:.01em}
+.card .chip{background:var(--card2)}
+#app{min-height:100vh;min-height:100dvh}
+
+.screen{padding:calc(var(--sat) + 20px) 20px calc(var(--sab) + 104px);display:flex;flex-direction:column;gap:16px;max-width:560px;margin:0 auto}
+.screen.full{padding-bottom:calc(var(--sab) + 24px);min-height:100dvh}
+.eyebrow{margin:0;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+h2{margin:0;font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.01em}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px} .xs{font-size:11px}
+.center{text-align:center}
+.card{background:var(--card);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.col{display:flex;flex-direction:column;gap:2px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--card);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.stat span{font-size:13px;color:var(--muted)}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:0;border-radius:16px;
+  background:var(--card2);color:var(--text);font-size:16px;font-weight:500;text-decoration:none;
+  transition:transform .1s ease-out,opacity .1s ease-out;touch-action:manipulation}
+.btn.primary{background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:17px;min-height:56px}
+.btn.big{min-height:62px;font-size:19px;border-radius:18px}
+.btn.ghost{background:transparent;color:var(--accent);min-height:44px;padding:0 4px}
+.btn.tint{background:var(--card);color:var(--accent)}
+.btn.danger{background:transparent;color:var(--red);min-height:44px;padding:0;justify-content:flex-start}
+.btn.sm{min-height:42px;font-size:15px;border-radius:12px;padding:0 12px;white-space:nowrap}
+.btn:disabled{opacity:.4}
+.iconbtn{width:44px;height:44px;border-radius:999px;border:0;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--text);flex:none;padding:0}
+.pill{font-size:13px;font-weight:600;border-radius:999px;padding:5px 10px;background:var(--accent);color:var(--accent-ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:16px;font-weight:600;border-radius:999px;padding:0 14px;min-height:44px;min-width:52px;border:0;background:var(--card);color:var(--text)}
+.chip.on{background:#fff;color:#000}
+.chip.done{color:var(--green)}
+
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;background:var(--card);border-radius:10px;padding:2px}
+.seg button{min-height:36px;border:0;border-radius:8px;background:transparent;font-size:14px;padding:0 4px}
+.seg button.on{background:#48484A;font-weight:600}
+
+.list{background:var(--card);border-radius:16px;padding:0 14px;display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;min-height:52px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;width:100%;padding:8px 0;color:var(--text)}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sub{font-size:13px;color:var(--muted)}
+.li .sub{display:block}
+.li .chev{color:var(--dim);display:flex}
+.badge{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;font-weight:700;font-size:13px;color:#000}
+.badge.off{background:var(--card2);color:var(--muted)}
+
+.bar{height:4px;background:var(--card2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:4px;background:var(--accent);transition:width .3s ease}
+
+.banner{background:rgba(10,132,255,.14);border:1px solid rgba(10,132,255,.35);border-radius:18px;padding:12px 14px;display:flex;gap:12px;align-items:center}
+.banner span{font-size:14px;color:#EBEBF5}
+
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--sab));padding-bottom:var(--sab);
+  background:rgba(28,28,30,.72);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:repeat(4,1fr);z-index:10}
+.tabbar button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--muted)}
+.tabbar button.on{color:var(--accent)}
+
+/* nav */
+.nav{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin:-8px -4px 0}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;animation:fade .2s ease-out}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:calc(100dvh - var(--sat) - 40px);overflow-y:auto;z-index:21;
+  background:var(--card);border-radius:28px 28px 0 0;padding:10px 18px calc(var(--sab) + 24px);display:flex;flex-direction:column;gap:14px;
+  max-width:560px;margin:0 auto;animation:up .32s cubic-bezier(.2,.9,.25,1)}
+.sheet .grab{width:40px;height:5px;border-radius:999px;background:#48484A;align-self:center;flex:none}
+.sheet .list{background:var(--card2)}
+.sheet .li{border-bottom-color:var(--line2)}
+.sheet .btn:not(.primary):not(.ghost):not(.danger){background:var(--card2)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--sab) + 84px);transform:translateX(-50%);background:#2C2C2E;color:#fff;padding:10px 16px;border-radius:14px;font-size:15px;z-index:40;animation:fade .2s;white-space:nowrap}
+
+/* switch */
+.switch{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:999px;background:#39393D;position:relative;flex:none;margin:0;transition:background .2s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:999px;background:#fff;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.switch:checked{background:var(--green)}
+.switch:checked::after{transform:translateX(20px)}
+
+/* cubo 3D */
+.cubebox{position:relative;width:100%;height:280px;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none}
+.cubebox.sm{height:230px}
+.cube-vp{width:100%;height:100%;perspective:900px;display:flex;align-items:center;justify-content:center;cursor:grab}
+.cube-scene{position:relative;width:0;height:0;transform-style:preserve-3d}
+.cubie{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.cface{position:absolute;left:calc(var(--s) / -2);top:calc(var(--s) / -2);width:var(--s);height:var(--s);background:#0b0b0c;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:calc(var(--s) * .06)}
+.cface i{display:block;width:100%;height:100%;border-radius:calc(var(--s) * .14);background:transparent}
+.cube-hint{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:12px;color:var(--dim);pointer-events:none}
+
+/* notación */
+.bigmove{font-size:64px;line-height:1;font-weight:700;color:var(--accent);letter-spacing:-.02em}
+.notegrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.notegrid .chip{padding:0;min-width:0}
+.tok{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:38px;padding:0 8px;border-radius:10px;background:var(--card2);font-weight:600;font-size:17px}
+.qopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.qopts .btn{min-height:68px;font-size:28px;font-weight:700}
+.qopts .btn.ok{background:var(--green);color:#000}
+.qopts .btn.bad{background:transparent;box-shadow:inset 0 0 0 2px var(--red);color:var(--red)}
+
+/* cronómetro */
+.scr{font-size:18px;line-height:1.6;word-spacing:4px}
+.timer-big{font-size:88px;font-weight:200;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.timer-zone{-webkit-touch-callout:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:190px;border-radius:24px;touch-action:none;user-select:none;-webkit-user-select:none}
+.timer-full{-webkit-touch-callout:none;position:fixed;inset:0;z-index:30;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;touch-action:none;user-select:none;-webkit-user-select:none;padding:calc(var(--sat) + 20px) 20px calc(var(--sab) + 20px)}
+.timer-full .timer-big{font-size:96px}
+.timer-full.hold .timer-big{color:var(--red)}
+.timer-full.ready .timer-big{color:var(--green)}
+.timer-full.insp .timer-big{color:var(--gold)}
+.timer-zone.hold .timer-big{color:var(--red)}
+.timer-zone.ready .timer-big{color:var(--green)}
+
+/* respuesta al tocar (estilo iOS) */
+.btn,.iconbtn,.chip,.tabbar button{transition:transform .45s cubic-bezier(.34,1.56,.64,1),filter .3s ease,opacity .3s ease,background-color .2s}
+.btn.pressed,.iconbtn.pressed,.chip.pressed{transform:scale(.96);filter:brightness(.78);transition:transform .08s ease-out,filter .08s ease-out}
+.btn.ghost.pressed,.btn.danger.pressed{transform:none;opacity:.45;filter:none}
+.tabbar button.pressed{transform:scale(.88);opacity:.7;transition:transform .08s ease-out,opacity .08s}
+.seg button{transition:background-color .2s ease,opacity .25s ease}
+.seg button.pressed{opacity:.55;transition:opacity .05s}
+.list .li{margin:0 -14px;padding-left:14px;padding-right:14px;width:calc(100% + 28px);transition:background-color .35s ease}
+.li.pressed{background-color:rgba(255,255,255,.09);transition:background-color 0s}
+
+/* transiciones entre pantallas (push/pop) */
+@keyframes pushIn{from{transform:translateX(30%);opacity:0}to{transform:none;opacity:1}}
+@keyframes pushOut{from{transform:none;opacity:1}to{transform:translateX(-14%);opacity:0}}
+@keyframes popIn{from{transform:translateX(-14%);opacity:0}to{transform:none;opacity:1}}
+@keyframes popOut{from{transform:none;opacity:1}to{transform:translateX(30%);opacity:0}}
+@keyframes down{from{transform:none}to{transform:translateY(100%)}}
+@keyframes fadeout{from{opacity:1}to{opacity:0}}
+.tabbar{view-transition-name:tabbar}
+::view-transition-group(tabbar){animation:none}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.2s}
+html[data-nav=push]::view-transition-old(root){animation:pushOut .34s cubic-bezier(.2,.9,.25,1) both}
+html[data-nav=push]::view-transition-new(root){animation:pushIn .4s cubic-bezier(.2,.9,.25,1) both}
+html[data-nav=pop]::view-transition-old(root){animation:popOut .34s cubic-bezier(.2,.9,.25,1) both}
+html[data-nav=pop]::view-transition-new(root){animation:popIn .4s cubic-bezier(.2,.9,.25,1) both}
+.anim-push{animation:pushIn .4s cubic-bezier(.2,.9,.25,1) both}
+.anim-pop{animation:popIn .4s cubic-bezier(.2,.9,.25,1) both}
+.anim-fade{animation:fade .2s ease-out both}
+.sheet.closing{animation:down .22s cubic-bezier(.4,0,1,1) forwards}
+.scrim.closing{animation:fadeout .22s forwards}
+
+@media (prefers-reduced-motion:reduce){
+  .anim-push,.anim-pop{animation:fade .2s both}
+  html[data-nav]::view-transition-old(root),html[data-nav]::view-transition-new(root){animation:none}
+  .sheet.closing,.scrim.closing{animation:fadeout .15s forwards}
+  .btn.pressed,.iconbtn.pressed,.chip.pressed,.tabbar button.pressed{transform:none}
+  .sheet,.scrim,.toast{animation:fade .15s}
+  .btn,.iconbtn,.bar i{transition:none}
+}
+@media (prefers-reduced-transparency:reduce){ .tabbar{background:#1C1C1E;backdrop-filter:none;-webkit-backdrop-filter:none} }
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// CFOP Trainer — lógica pura (sin DOM). Se puede probar con node.
+// Orientación de armado: U amarillo, D blanco, F verde, B azul, R naranjo, L rojo.
+// Coordenadas: x hacia la derecha (R), y hacia arriba (U), z hacia el frente (F).
+
+const COLORS = { U: '#FFD60A', D: '#FFFFFF', F: '#30D158', B: '#0A84FF', R: '#FF9F0A', L: '#FF453A' };
+const FACE_NORMALS = { U: [0, 1, 0], D: [0, -1, 0], R: [1, 0, 0], L: [-1, 0, 0], F: [0, 0, 1], B: [0, 0, -1] };
+
+// Cada movimiento: eje (0=x,1=y,2=z), capas afectadas (coordenada en ese eje)
+// y cuartos de vuelta en sentido antihorario (regla de la mano derecha) para la versión "horaria".
+const MOVE_DEFS = {
+  R: { ax: 0, layers: [1], q: -1 }, L: { ax: 0, layers: [-1], q: 1 },
+  U: { ax: 1, layers: [1], q: -1 }, D: { ax: 1, layers: [-1], q: 1 },
+  F: { ax: 2, layers: [1], q: -1 }, B: { ax: 2, layers: [-1], q: 1 },
+  M: { ax: 0, layers: [0], q: 1 }, E: { ax: 1, layers: [0], q: 1 }, S: { ax: 2, layers: [0], q: -1 },
+  x: { ax: 0, layers: [-1, 0, 1], q: -1 }, y: { ax: 1, layers: [-1, 0, 1], q: -1 }, z: { ax: 2, layers: [-1, 0, 1], q: -1 },
+  r: { ax: 0, layers: [0, 1], q: -1 }, l: { ax: 0, layers: [-1, 0], q: 1 },
+  u: { ax: 1, layers: [0, 1], q: -1 }, d: { ax: 1, layers: [-1, 0], q: 1 },
+  f: { ax: 2, layers: [0, 1], q: -1 }, b: { ax: 2, layers: [-1, 0], q: 1 },
+};
+
+function rotVec(v, ax, q) {
+  let [x, y, z] = v;
+  q = ((q % 4) + 4) % 4;
+  for (let i = 0; i < q; i++) {
+    if (ax === 0) [y, z] = [-z, y];
+    else if (ax === 1) [z, x] = [-x, z];
+    else [x, y] = [-y, x];
+  }
+  return [x, y, z];
+}
+
+function solved() {
+  const st = [];
+  for (const f of Object.keys(FACE_NORMALS)) {
+    const n = FACE_NORMALS[f];
+    const ax = n.findIndex(v => v !== 0);
+    const others = [0, 1, 2].filter(i => i !== ax);
+    for (const a of [-1, 0, 1]) for (const b of [-1, 0, 1]) {
+      const p = [0, 0, 0];
+      p[ax] = n[ax]; p[others[0]] = a; p[others[1]] = b;
+      st.push({ p, n: n.slice(), c: f });
+    }
+  }
+  return st;
+}
+
+// "R'" → {base:'R', turns:-1}; acepta ' ’ ′ y Rw como r
+function parseMove(tok) {
+  let t = tok.trim().replace(/[’′`]/g, "'");
+  let m = /^([RLUDFBMESxyz])(w?)(2'|2|'|)$/.exec(t) || /^([rludfb])()(2'|2|'|)$/.exec(t);
+  if (!m) throw new Error('Movimiento no válido: ' + tok);
+  let base = m[1];
+  if (m[2] === 'w') base = base.toLowerCase();
+  const suf = m[3];
+  const turns = suf === "'" ? -1 : (suf === '2' || suf === "2'") ? 2 : 1;
+  return { base, turns, def: MOVE_DEFS[base] };
+}
+
+function parseAlg(alg) {
+  return alg.trim().split(/\s+/).filter(Boolean).map(parseMove);
+}
+
+function moveToString(m) {
+  return m.base + (m.turns === -1 ? "'" : m.turns === 2 ? '2' : '');
+}
+
+function applyMove(st, mv) {
+  const m = typeof mv === 'string' ? parseMove(mv) : mv;
+  const { ax, layers, q } = m.def;
+  const qq = q * m.turns;
+  return st.map(s => layers.includes(s.p[ax])
+    ? { p: rotVec(s.p, ax, qq), n: rotVec(s.n, ax, qq), c: s.c }
+    : s);
+}
+
+function applyAlg(st, alg) {
+  for (const m of (typeof alg === 'string' ? parseAlg(alg) : alg)) st = applyMove(st, m);
+  return st;
+}
+
+function invertAlg(alg) {
+  return parseAlg(alg).reverse().map(m => moveToString({ base: m.base, turns: m.turns === 2 ? 2 : -m.turns })).join(' ');
+}
+
+function key(s) { return s.p.join(',') + '|' + s.n.join(','); }
+function stateMap(st) { const m = {}; for (const s of st) m[key(s)] = s.c; return m; }
+function sameState(a, b) {
+  const ma = stateMap(a), mb = stateMap(b);
+  return Object.keys(ma).every(k => ma[k] === mb[k]);
+}
+function isSolved(st) {
+  // resuelto si cada cara tiene un solo color (admite cubo girado)
+  const byFace = {};
+  for (const s of st) { const k = s.n.join(','); (byFace[k] = byFace[k] || new Set()).add(s.c); }
+  return Object.values(byFace).every(set => set.size === 1);
+}
+
+// Mezcla aleatoria de caras (sin repetir cara ni A B A con caras opuestas)
+const OPP = { U: 'D', D: 'U', R: 'L', L: 'R', F: 'B', B: 'F' };
+function scramble(len = 20, rnd = Math.random) {
+  const faces = 'UDRLFB', sufs = ['', "'", '2'];
+  const out = [];
+  while (out.length < len) {
+    const f = faces[Math.floor(rnd() * 6)];
+    const last = out[out.length - 1], prev = out[out.length - 2];
+    if (last && last[0] === f) continue;
+    if (last && prev && OPP[f] === last[0] && prev[0] === f) continue;
+    out.push(f + sufs[Math.floor(rnd() * 3)]);
+  }
+  return out.join(' ');
+}
+
+// ---- Tiempos (ms). penalty: 0 | 2 (+2) | 'dnf'
+function effTime(s) {
+  if (s.penalty === 'dnf') return Infinity;
+  return s.ms + (s.penalty === 2 ? 2000 : 0);
+}
+function fmtTime(ms) {
+  if (ms === Infinity) return 'DNF';
+  if (ms == null || isNaN(ms)) return '—';
+  const cs = Math.floor(ms / 10);
+  const m = Math.floor(cs / 6000), s = Math.floor((cs % 6000) / 100), c = cs % 100;
+  const cc = String(c).padStart(2, '0');
+  return m > 0 ? `${m}:${String(s).padStart(2, '0')},${cc}` : `${s},${cc}`;
+}
+function fmtSolve(s) {
+  if (s.penalty === 'dnf') return 'DNF';
+  return fmtTime(effTime(s)) + (s.penalty === 2 ? '+' : '');
+}
+// Promedio de n (WCA): se quitan el mejor y el peor (5% en ambos extremos, mínimo 1)
+function avgOf(solves, n) {
+  if (solves.length < n) return null;
+  const t = solves.slice(0, n).map(effTime).sort((a, b) => a - b);
+  const cut = Math.max(1, Math.ceil(n * 0.05));
+  const mid = t.slice(cut, n - cut);
+  if (mid.some(v => v === Infinity)) return Infinity;
+  return mid.reduce((a, b) => a + b, 0) / mid.length;
+}
+function bestOf(solves) {
+  let b = null;
+  for (const s of solves) { const e = effTime(s); if (e !== Infinity && (b === null || e < b)) b = e; }
+  return b;
+}
+function bestAvg(solves, n) {
+  let best = null;
+  for (let i = 0; i + n <= solves.length; i++) {
+    const a = avgOf(solves.slice(i), n);
+    if (a !== null && a !== Infinity && (best === null || a < best)) best = a;
+  }
+  return best;
+}
+
+// ---- Notación
+const FACE_MOVES = ['R', 'L', 'U', 'D', 'F', 'B'];
+const NOTATION_GROUPS = [
+  { id: 'caras', title: 'Caras', moves: FACE_MOVES },
+  { id: 'medio', title: 'Capas del medio', moves: ['M', 'E', 'S'] },
+  { id: 'giros', title: 'Girar el cubo completo', moves: ['x', 'y', 'z'] },
+  { id: 'dobles', title: 'Dos capas (minúscula o w)', moves: ['r', 'l', 'u', 'd', 'f', 'b'] },
+];
+const MOVE_INFO = {
+  R: ['Derecha', 'Gira la cara derecha en sentido horario, mirándola de frente: la columna derecha sube.'],
+  L: ['Izquierda', 'Gira la cara izquierda en sentido horario, mirándola de frente: la columna izquierda baja.'],
+  U: ['Arriba', 'Gira la cara de arriba en sentido horario, mirándola desde arriba: la fila de adelante se va hacia la izquierda.'],
+  D: ['Abajo', 'Gira la cara de abajo en sentido horario, mirándola desde abajo: la fila de adelante se va hacia la derecha.'],
+  F: ['Frente', 'Gira la cara del frente en sentido horario, como un volante hacia la derecha.'],
+  B: ['Atrás', 'Gira la cara de atrás en sentido horario, mirándola desde atrás: la fila de arriba se va hacia la izquierda.'],
+  M: ['Medio (M)', 'La capa del medio entre R y L. Gira igual que L: la columna del medio baja.'],
+  E: ['Ecuador (E)', 'La capa horizontal del medio. Gira igual que D: la fila del medio se va hacia la derecha.'],
+  S: ['Standing (S)', 'La capa del medio entre F y B. Gira igual que F.'],
+  x: ['Girar en x', 'Gira el cubo completo igual que R: el frente pasa a ser la cara de arriba.'],
+  y: ['Girar en y', 'Gira el cubo completo igual que U: la cara derecha pasa al frente.'],
+  z: ['Girar en z', 'Gira el cubo completo igual que F: la cara de arriba pasa a la derecha.'],
+  r: ['Doble derecha', 'Las dos capas de la derecha juntas (R más la del medio). También se escribe Rw.'],
+  l: ['Doble izquierda', 'Las dos capas de la izquierda juntas (L más la del medio). También se escribe Lw.'],
+  u: ['Doble arriba', 'Las dos capas de arriba juntas (U más la del medio). También se escribe Uw.'],
+  d: ['Doble abajo', 'Las dos capas de abajo juntas (D más la del medio). También se escribe Dw.'],
+  f: ['Doble frente', 'Las dos capas del frente juntas (F más la del medio). También se escribe Fw.'],
+  b: ['Doble atrás', 'Las dos capas de atrás juntas (B más la del medio). También se escribe Bw.'],
+};
+function suffixText(suf) {
+  return suf === "'" ? 'Al revés: sentido antihorario.' : suf === '2' ? 'Media vuelta (180°). Da lo mismo el sentido.' : 'Sentido horario.';
+}
+function allVariants(moves) { const out = []; for (const m of moves) out.push(m, m + "'", m + '2'); return out; }
+
+// Opciones confundibles para la práctica: mismo movimiento al revés, cara opuesta, etc.
+function quizOptions(move, pool, rnd = Math.random) {
+  const m = parseMove(move);
+  const base = m.base, suf = move.slice(base.length);
+  const cands = new Set();
+  const inv = suf === "'" ? '' : suf === '2' ? "'" : "'";
+  cands.add(base + inv);
+  const opp = { R: 'L', L: 'R', U: 'D', D: 'U', F: 'B', B: 'F', M: 'L', E: 'D', S: 'F', x: 'R', y: 'U', z: 'F', r: 'R', l: 'L', u: 'U', d: 'D', f: 'F', b: 'B' }[base];
+  if (opp) cands.add(opp + suf);
+  if (opp) cands.add(opp + inv);
+  for (const p of pool) if (cands.size < 8) cands.add(p);
+  cands.delete(move);
+  const arr = [...cands];
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  const opts = [move, ...arr.slice(0, 3)];
+  for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  return opts;
+}
+
+// Un movimiento está "dominado" con 3 aciertos seguidos
+function moveMastered(rec) { return !!rec && rec.streak >= 3; }
+
+const Logic = {
+  COLORS, FACE_NORMALS, MOVE_DEFS, rotVec, solved, parseMove, parseAlg, moveToString, applyMove, applyAlg,
+  invertAlg, sameState, isSolved, scramble, effTime, fmtTime, fmtSolve, avgOf, bestOf, bestAvg,
+  FACE_MOVES, NOTATION_GROUPS, MOVE_INFO, suffixText, allVariants, quizOptions, moveMastered,
+};
+if (typeof module !== 'undefined') module.exports = Logic;
+
+// Cubo 3D con CSS (26 piezas). Se gira arrastrando con el dedo y anima movimientos.
+class Cube3D {
+  constructor(opts = {}) {
+    this.S = opts.size || 52;
+    this.rx = -28; this.ry = -36;
+    this.speed = 1;
+    this.state = Logic.solved();
+    this.token = 0;
+    this.el = document.createElement('div');
+    this.el.className = 'cube-vp';
+    this.scene = document.createElement('div');
+    this.scene.className = 'cube-scene';
+    this.scene.style.setProperty('--s', this.S + 'px');
+    this.el.appendChild(this.scene);
+    this.cubies = {};
+    const h = this.S / 2;
+    const faceT = {
+      '0,0,1': `translateZ(${h}px)`, '0,0,-1': `rotateY(180deg) translateZ(${h}px)`,
+      '1,0,0': `rotateY(90deg) translateZ(${h}px)`, '-1,0,0': `rotateY(-90deg) translateZ(${h}px)`,
+      '0,1,0': `rotateX(90deg) translateZ(${h}px)`, '0,-1,0': `rotateX(-90deg) translateZ(${h}px)`,
+    };
+    for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
+      if (!x && !y && !z) continue;
+      const c = document.createElement('div');
+      c.className = 'cubie';
+      const faces = {};
+      for (const n in faceT) {
+        const f = document.createElement('div');
+        f.className = 'cface';
+        f.style.transform = faceT[n];
+        const i = document.createElement('i');
+        f.appendChild(i);
+        c.appendChild(f);
+        faces[n] = i;
+      }
+      const k = [x, y, z].join(',');
+      this.cubies[k] = { el: c, p: [x, y, z], faces, base: `translate3d(${x * this.S}px,${-y * this.S}px,${z * this.S}px)` };
+      c.style.transform = this.cubies[k].base;
+      this.scene.appendChild(c);
+    }
+    this.paint();
+    this.applyView();
+    this.bindDrag();
+  }
+
+  applyView() { this.scene.style.transform = `rotateX(${this.rx}deg) rotateY(${this.ry}deg)`; }
+  resetView() { this.rx = -28; this.ry = -36; this.applyView(); }
+
+  bindDrag() {
+    let sx = 0, sy = 0, rx0 = 0, ry0 = 0, id = null, lastTap = 0;
+    this.el.addEventListener('pointerdown', e => {
+      id = e.pointerId; sx = e.clientX; sy = e.clientY; rx0 = this.rx; ry0 = this.ry;
+      try { this.el.setPointerCapture(id); } catch (_) {}
+      const now = Date.now();
+      if (now - lastTap < 300) this.resetView();
+      lastTap = now;
+    });
+    this.el.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return;
+      this.ry = ry0 + (e.clientX - sx) * 0.6;
+      this.rx = Math.max(-90, Math.min(90, rx0 - (e.clientY - sy) * 0.6));
+      this.applyView();
+    });
+    const end = e => { if (e.pointerId === id) id = null; };
+    this.el.addEventListener('pointerup', end);
+    this.el.addEventListener('pointercancel', end);
+  }
+
+  paint() {
+    for (const k in this.cubies) for (const n in this.cubies[k].faces) this.cubies[k].faces[n].style.background = 'transparent';
+    for (const s of this.state) {
+      const c = this.cubies[s.p.join(',')];
+      if (c) c.faces[s.n.join(',')].style.background = Logic.COLORS[s.c];
+    }
+  }
+
+  setState(st) { this.token++; this.state = st; this.resetTransforms(); this.paint(); }
+  reset() { this.setState(Logic.solved()); }
+  stop() { this.token++; this.resetTransforms(); }
+
+  resetTransforms() { for (const k in this.cubies) this.cubies[k].el.style.transform = this.cubies[k].base; }
+
+  // Matriz de rotación en coordenadas del modelo → CSS (eje y invertido)
+  static cssMatrix(ax, deg) {
+    const t = deg * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+    let R;
+    if (ax === 0) R = [[1, 0, 0], [0, c, -s], [0, s, c]];
+    else if (ax === 1) R = [[c, 0, s], [0, 1, 0], [-s, 0, c]];
+    else R = [[c, -s, 0], [s, c, 0], [0, 0, 1]];
+    const P = [1, -1, 1];
+    const M = R.map((row, i) => row.map((v, j) => P[i] * v * P[j]));
+    // matrix3d es por columnas
+    return `matrix3d(${M[0][0]},${M[1][0]},${M[2][0]},0,${M[0][1]},${M[1][1]},${M[2][1]},0,${M[0][2]},${M[1][2]},${M[2][2]},0,0,0,0,1)`;
+  }
+
+  animateMove(mv, token) {
+    const m = typeof mv === 'string' ? Logic.parseMove(mv) : mv;
+    const { ax, layers, q } = m.def;
+    const qq = q * m.turns;
+    const parts = Object.values(this.cubies).filter(c => layers.includes(c.p[ax]));
+    const dur = (Math.abs(qq) === 2 ? 420 : 300) / this.speed;
+    return new Promise(resolve => {
+      const t0 = performance.now();
+      const step = now => {
+        if (token !== this.token) { resolve(false); return; }
+        let k = Math.min(1, (now - t0) / dur);
+        const e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        const mat = Cube3D.cssMatrix(ax, qq * 90 * e);
+        for (const c of parts) c.el.style.transform = mat + ' ' + c.base;
+        if (k < 1) requestAnimationFrame(step);
+        else {
+          this.state = Logic.applyMove(this.state, m);
+          this.resetTransforms();
+          this.paint();
+          resolve(true);
+        }
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  // Reproduce un algoritmo; onStep(i) se llama antes de cada movimiento
+  async play(alg, onStep, gap = 90) {
+    const token = ++this.token;
+    this.resetTransforms();
+    const moves = typeof alg === 'string' ? Logic.parseAlg(alg) : alg;
+    for (let i = 0; i < moves.length; i++) {
+      if (onStep) onStep(i);
+      const ok = await this.animateMove(moves[i], token);
+      if (!ok) return false;
+      if (gap && i < moves.length - 1) await new Promise(r => setTimeout(r, gap / this.speed));
+      if (token !== this.token) return false;
+    }
+    if (onStep) onStep(moves.length);
+    return true;
+  }
+}
+
+// CFOP Trainer — interfaz
+const L = Logic;
+const VERSION = '1.0 · etapa 1';
+const STORE = 'cfop.v1';
+
+// ---------- datos
+function defaultDb() {
+  return { v: 1, notation: {}, quizzes: [], solves: [], settings: { inspection: false, speed: 1 } };
+}
+let db = load();
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE);
+    if (raw) { const d = JSON.parse(raw); return normalize(d); }
+  } catch (_) {}
+  return defaultDb();
+}
+function normalize(d) {
+  const base = defaultDb();
+  if (!d || typeof d !== 'object') return base;
+  return {
+    v: 1,
+    notation: d.notation && typeof d.notation === 'object' ? d.notation : {},
+    quizzes: Array.isArray(d.quizzes) ? d.quizzes : [],
+    solves: Array.isArray(d.solves) ? d.solves.filter(s => s && typeof s.ms === 'number') : [],
+    settings: Object.assign(base.settings, d.settings || {}),
+  };
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(db)); } catch (_) {} }
+
+// ---------- estado temporal
+const ui = {
+  tab: 'aprender', sub: null, from: null,
+  nota: { move: 'R', suf: '' },
+  quizCfg: { mode: 'ver', pool: 'caras', n: 20 },
+  quiz: null,
+  scr: L.scramble(),
+  timer: null, // {phase:'idle'|'hold'|'ready'|'insp'|'run', ...}
+  sheet: null,
+  toast: null,
+};
+let cube = null;
+function getCube() {
+  if (!cube) cube = new Cube3D({ size: 50 });
+  cube.speed = db.settings.speed || 1;
+  return cube;
+}
+
+// ---------- utilidades
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pretty = m => esc(m).replace(/'/g, '′');
+const $ = s => document.querySelector(s);
+
+const IC = {
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M8 7h7"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6"/>',
+  gear: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',
+  replay: '<path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4h4"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  shuffle: '<path d="M4 7h3c4 0 6 10 10 10h3"/><path d="M4 17h3c1.5 0 2.7-1.4 3.7-3.2"/><path d="M13.3 10.2C14.3 8.4 15.5 7 17 7h3"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+};
+const ic = (n, s = 22, sw = 1.8) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
+function relDate(ts) {
+  const d = new Date(ts), now = new Date();
+  const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(now) - day(d)) / 86400000);
+  const hm = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (diff === 0) return 'Hoy ' + hm;
+  if (diff === 1) return 'Ayer ' + hm;
+  return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) + ' ' + hm;
+}
+
+// ---------- notación: progreso
+const FACE_VARIANTS = L.allVariants(L.FACE_MOVES);
+function masteredCount(list = FACE_VARIANTS) { return list.filter(m => L.moveMastered(db.notation[m])).length; }
+function notationDone() { return masteredCount() >= FACE_VARIANTS.length; }
+
+// ---------- navegación
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let lastScreenKey = '';
+function nav(fn, dir) {
+  if (cube) cube.stop();
+  const run = () => { fn(); render(true, dir); };
+  if (document.startViewTransition && !reduceMotion()) {
+    if (dir) document.documentElement.dataset.nav = dir;
+    const t = document.startViewTransition(run);
+    t.finished.finally(() => { delete document.documentElement.dataset.nav; });
+  } else run();
+}
+function go(sub) { nav(() => { ui.from = ui.sub; ui.sub = sub; window.scrollTo(0, 0); }, 'push'); }
+function back(to = null) { nav(() => { ui.sub = to; ui.quiz = null; window.scrollTo(0, 0); }, 'pop'); }
+function setTab(t) {
+  if (t === ui.tab && !ui.sub) return;
+  nav(() => { ui.tab = t; ui.sub = null; ui.quiz = null; window.scrollTo(0, 0); }, null);
+}
+
+// ---------- toast y diálogos
+let toastTimer = null;
+function toast(msg) {
+  ui.toast = msg;
+  let el = $('#toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = msg; el.style.display = '';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2200);
+}
+let sheetResolve = null;
+function ask({ title, text = '', buttons }) {
+  return new Promise(res => {
+    sheetResolve = res;
+    ui.sheet = { kind: 'ask', title, text, buttons };
+    renderSheet();
+  });
+}
+function closeSheet(val) {
+  const s = $('.sheet'), sc = $('.scrim');
+  const r = sheetResolve; sheetResolve = null;
+  if (s && !reduceMotion()) { s.classList.add('closing'); sc && sc.classList.add('closing'); }
+  setTimeout(() => { ui.sheet = null; renderSheet(); if (r) r(val); }, reduceMotion() ? 0 : 200);
+}
+function renderSheet() {
+  let host = $('#sheethost');
+  if (!host) { host = document.createElement('div'); host.id = 'sheethost'; document.body.appendChild(host); }
+  const s = ui.sheet;
+  if (!s) { host.innerHTML = ''; return; }
+  let inner = '';
+  if (s.kind === 'ask') {
+    inner = `<h2 id="shT">${esc(s.title)}</h2>${s.text ? `<p class="muted">${esc(s.text)}</p>` : ''}
+      <div class="col" style="gap:8px">${s.buttons.map((b, i) => `<button class="btn ${b.kind === 'primary' ? 'primary' : ''}" style="${b.kind === 'danger' ? 'color:var(--red)' : ''}" data-act="ask" data-i="${i}">${esc(b.label)}</button>`).join('')}</div>`;
+  } else if (s.kind === 'solve') {
+    const sv = db.solves.find(x => x.id === s.id);
+    if (!sv) { ui.sheet = null; host.innerHTML = ''; return; }
+    const pen = sv.penalty === 'dnf' ? 'dnf' : sv.penalty === 2 ? '2' : '0';
+    inner = `<div class="row"><div class="col"><span class="eyebrow">${esc(relDate(sv.at))}</span><b class="num" id="shT" style="font-size:44px;font-weight:300;letter-spacing:-.02em">${L.fmtSolve(sv)}</b></div></div>
+      <div class="seg" role="group" aria-label="Penalización">
+        <button class="${pen === '0' ? 'on' : ''}" data-act="pen" data-v="0">Normal</button>
+        <button class="${pen === '2' ? 'on' : ''}" data-act="pen" data-v="2">+2</button>
+        <button class="${pen === 'dnf' ? 'on' : ''}" data-act="pen" data-v="dnf">DNF</button></div>
+      <div class="card" style="background:var(--card2);gap:6px"><span class="eyebrow">Mezcla</span><span class="alg scr">${pretty(sv.scr)}</span></div>
+      <button class="btn danger" data-act="delSolve">${ic('trash', 20)}Borrar este tiempo</button>
+      <button class="btn" data-act="closeSheet">Listo</button>`;
+  }
+  host.innerHTML = `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="grab"></div>${inner}</div>`;
+}
+
+// ---------- pantallas
+function tabbar() {
+  const t = [['aprender', 'book', 'Aprender'], ['entrenar', 'target', 'Entrenar'], ['crono', 'timer', 'Cronómetro'], ['ajustes', 'gear', 'Ajustes']];
+  return `<nav class="tabbar" aria-label="Pestañas">${t.map(([id, i, l]) => `<button class="${ui.tab === id ? 'on' : ''}" data-act="tab" data-v="${id}" ${ui.tab === id ? 'aria-current="page"' : ''}>${ic(i, 26)}<span>${l}</span></button>`).join('')}</nav>`;
+}
+function navbar(label, right = '') {
+  return `<div class="nav"><button class="btn ghost" data-act="back">${ic('back', 22)}${esc(label)}</button><span class="muted small num">${right}</span></div>`;
+}
+
+function viewHome() {
+  const n = masteredCount(), total = FACE_VARIANTS.length;
+  const stages = [
+    { id: 'nota', ab: 'Aa', col: '#8E8E93', name: 'Notación', sub: 'R, U′, F2… y giros del cubo', prog: `${n} de ${total}`, pct: n / total * 100, ready: true, done: notationDone() },
+    { ab: '+', col: '#FFFFFF', name: 'Cross', sub: 'La cruz blanca, intuitiva' },
+    { ab: 'F2L', col: '#30D158', name: 'F2L', sub: '41 casos' },
+    { ab: 'O2', col: '#FFD60A', name: 'OLL en 2 pasos', sub: '10 algoritmos' },
+    { ab: 'P2', col: '#FF9F0A', name: 'PLL en 2 pasos', sub: '6 algoritmos' },
+    { ab: 'OLL', col: '#FFD60A', name: 'OLL completo', sub: '57 casos', locked: true },
+    { ab: 'PLL', col: '#FF9F0A', name: 'PLL completo', sub: '21 casos', locked: true },
+  ];
+  const rows = stages.map(s => {
+    if (s.ready) return `<button class="li" data-act="go" data-v="nota"><span class="badge" style="background:${s.col}">${s.ab}</span>
+      <span class="grow"><span class="row"><span style="font-weight:600">${s.name}</span><span class="sub num">${s.prog}</span></span><span class="bar"><i style="width:${s.pct}%"></i></span></span>
+      <span class="chev" style="${s.done ? 'color:var(--green)' : ''}">${ic(s.done ? 'check' : 'chev', 20, s.done ? 2.2 : 1.8)}</span></button>`;
+    return `<div class="li" aria-disabled="true"><span class="badge off">${s.ab}</span>
+      <span class="grow"><span style="font-weight:600;color:var(--muted)">${s.name}</span><span class="sub">${s.locked ? 'Se abre al dominar la versión en 2 pasos' : s.sub + ' · próxima versión'}</span></span>
+      <span class="chev">${s.locked ? ic('lock', 18) : ''}</span></div>`;
+  }).join('');
+  const cont = notationDone()
+    ? `<p class="eyebrow">Notación lista</p><h2>Dominaste los 18 giros de caras</h2><span class="muted small">Sigue practicando las capas del medio y los giros del cubo. Cross llega en la próxima versión.</span><button class="btn primary" data-act="go" data-v="quiz">Practicar notación</button>`
+    : `<p class="eyebrow">Continuar</p><div class="row"><div class="col"><h2>Notación</h2><span class="muted small">Aprende a leer los algoritmos</span></div><span class="muted small num">${n} de ${total}</span></div><button class="btn primary" data-act="go" data-v="nota">Seguir aprendiendo</button>`;
+  return `<div class="screen">
+    <p class="eyebrow">CFOP Trainer</p>
+    <h1>Aprender</h1>
+    <div class="card">${cont}</div>
+    <p class="eyebrow">Tu ruta</p>
+    <div class="list">${rows}</div>
+    <p class="muted small">Esta primera versión trae la notación y el cronómetro. Cross, F2L, OLL y PLL llegan en las próximas.</p>
+  </div>${tabbar()}`;
+}
+
+function viewNotation() {
+  const { move, suf } = ui.nota;
+  const full = move + suf;
+  const [name, desc] = L.MOVE_INFO[move];
+  const groups = L.NOTATION_GROUPS.map(g => `<p class="eyebrow">${g.title}</p>
+    <div class="notegrid">${g.moves.map(m => {
+      const done = ['', "'", '2'].every(s => L.moveMastered(db.notation[m + s]));
+      return `<button class="chip ${m === move ? 'on' : done ? 'done' : ''}" data-act="pickMove" data-v="${m}" aria-pressed="${m === move}">${m}</button>`;
+    }).join('')}</div>`).join('');
+  return `<div class="screen">
+    ${navbar(ui.tab === 'aprender' ? 'Aprender' : 'Volver')}
+    <h1>Notación</h1>
+    <div class="card" style="gap:12px;padding-top:8px">
+      <div class="cubebox" id="cubeMount"><span class="cube-hint">Arrastra para girar · doble toque para centrar</span></div>
+      <div class="row" style="align-items:flex-end"><div style="display:flex;align-items:baseline;gap:12px"><b class="bigmove alg">${pretty(full)}</b><span class="muted">${esc(name)}</span></div>
+        <button class="iconbtn" style="background:var(--card2)" data-act="replay" aria-label="Repetir el giro">${ic('replay', 22)}</button></div>
+      <div class="seg" role="group" aria-label="Variante">
+        <button class="${suf === '' ? 'on' : ''}" data-act="pickSuf" data-v="">${move}</button>
+        <button class="${suf === "'" ? 'on' : ''}" data-act="pickSuf" data-v="'">${move}′ al revés</button>
+        <button class="${suf === '2' ? 'on' : ''}" data-act="pickSuf" data-v="2">${move}2 doble</button></div>
+      <p style="font-size:15px;color:#EBEBF5">${esc(desc)} <span class="muted">${esc(L.suffixText(suf))}</span></p>
+    </div>
+    ${groups}
+    <div class="card" style="gap:8px"><p class="eyebrow">Para recordar</p>
+      <span style="font-size:15px">Cada letra es una cara: <b>R</b> derecha, <b>L</b> izquierda, <b>U</b> arriba, <b>D</b> abajo, <b>F</b> frente, <b>B</b> atrás. Sola es horario mirando esa cara de frente; con <b>′</b> es al revés y con <b>2</b> es media vuelta.</span></div>
+    <button class="btn primary" data-act="go" data-v="quiz">Practicar notación</button>
+  </div>${tabbar()}`;
+}
+
+function poolMoves(pool) {
+  if (pool === 'caras') return FACE_VARIANTS;
+  if (pool === 'medio') return L.allVariants([...L.FACE_MOVES, 'M', 'E', 'S']);
+  return L.allVariants(L.NOTATION_GROUPS.flatMap(g => g.moves));
+}
+function startQuiz() {
+  const pool = poolMoves(ui.quizCfg.pool);
+  const qs = [];
+  for (let i = 0; i < ui.quizCfg.n; i++) {
+    let m, tries = 0;
+    do {
+      const weights = pool.map(x => L.moveMastered(db.notation[x]) ? 1 : 3);
+      let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+      m = pool[weights.findIndex(w => (r -= w) < 0)] || pool[0];
+    } while (qs.length && qs[qs.length - 1] === m && tries++ < 10);
+    qs.push(m);
+  }
+  ui.quiz = { mode: ui.quizCfg.mode, pool, qs, i: 0, ok: 0, wrong: [], answered: null, opts: null, revealed: false };
+  prepQuestion();
+}
+function prepQuestion() {
+  const q = ui.quiz; const m = q.qs[q.i];
+  q.answered = null; q.revealed = false;
+  q.opts = q.mode === 'ver' ? L.quizOptions(m, q.pool) : null;
+}
+function recordAnswer(move, ok) {
+  const r = db.notation[move] || (db.notation[move] = { n: 0, ok: 0, streak: 0 });
+  r.n++; if (ok) { r.ok++; r.streak++; } else r.streak = 0;
+  save();
+}
+function viewQuiz() {
+  const q = ui.quiz;
+  if (!q) {
+    const c = ui.quizCfg;
+    return `<div class="screen">
+      ${navbar('Volver')}
+      <h1>Practicar notación</h1>
+      <div class="card"><p class="eyebrow">Modo</p>
+        <div class="seg" role="group" aria-label="Modo">
+          <button class="${c.mode === 'ver' ? 'on' : ''}" data-act="cfg" data-k="mode" data-v="ver">Ver el giro → letra</button>
+          <button class="${c.mode === 'hacer' ? 'on' : ''}" data-act="cfg" data-k="mode" data-v="hacer">Letra → hacerlo</button></div>
+        <span class="muted small">${c.mode === 'ver' ? 'El cubo hace un giro y eliges qué letra es.' : 'Ves una letra, la haces en tu cubo y después compruebas con la animación.'}</span>
+        <p class="eyebrow">Giros</p>
+        <div class="seg" role="group" aria-label="Giros">
+          <button class="${c.pool === 'caras' ? 'on' : ''}" data-act="cfg" data-k="pool" data-v="caras">Caras</button>
+          <button class="${c.pool === 'medio' ? 'on' : ''}" data-act="cfg" data-k="pool" data-v="medio">+ M E S</button>
+          <button class="${c.pool === 'todo' ? 'on' : ''}" data-act="cfg" data-k="pool" data-v="todo">Todo</button></div>
+        <p class="eyebrow">Preguntas</p>
+        <div class="seg" role="group" aria-label="Cantidad">
+          ${[10, 20, 30].map(n => `<button class="${c.n === n ? 'on' : ''}" data-act="cfg" data-k="n" data-v="${n}">${n}</button>`).join('')}</div>
+      </div>
+      <div class="list"><div class="li"><span class="grow"><span>Giros de caras dominados</span><span class="sub">Un giro queda dominado con 3 aciertos seguidos</span></span><b class="num">${masteredCount()} / 18</b></div></div>
+      <button class="btn primary" data-act="startQuiz">Empezar</button>
+    </div>${ui.tab === 'aprender' || ui.tab === 'entrenar' ? tabbar() : ''}`;
+  }
+  if (q.i >= q.qs.length) {
+    const pct = Math.round(q.ok / q.qs.length * 100);
+    const wrong = [...new Set(q.wrong)];
+    return `<div class="screen">
+      ${navbar('Volver')}
+      <p class="eyebrow">Resultado</p>
+      <h1 class="num">${q.ok} de ${q.qs.length}</h1>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      ${wrong.length ? `<div class="card"><p class="eyebrow">Para repasar</p><div class="chips">${wrong.map(m => `<button class="chip alg" data-act="study" data-v="${esc(m)}">${pretty(m)}</button>`).join('')}</div><span class="muted small">Toca uno para verlo en la guía.</span></div>`
+        : `<div class="banner">${ic('check', 22, 2.2)}<span>Sin errores. Los giros que aciertas 3 veces seguidas quedan dominados.</span></div>`}
+      <div class="list"><div class="li"><span class="grow">Giros de caras dominados</span><b class="num">${masteredCount()} / 18</b></div></div>
+      <button class="btn primary" data-act="startQuiz">Otra ronda</button>
+      <button class="btn" data-act="quizSetup">Cambiar modo</button>
+    </div>`;
+  }
+  const m = q.qs[q.i];
+  const head = `${navbar('Salir', `${q.i + 1} de ${q.qs.length} · ${q.ok} bien`)}
+    <div class="bar"><i style="width:${q.i / q.qs.length * 100}%"></i></div>`;
+  if (q.mode === 'ver') {
+    const opts = q.opts.map(o => {
+      let cls = '';
+      if (q.answered) { if (o === m) cls = 'ok'; else if (o === q.answered) cls = 'bad'; }
+      return `<button class="btn alg ${cls}" data-act="answer" data-v="${esc(o)}" ${q.answered ? 'disabled style="opacity:1"' : ''}>${pretty(o)}</button>`;
+    }).join('');
+    return `<div class="screen" style="gap:14px">${head}
+      <h1>¿Qué giro es?</h1>
+      <div class="card" style="gap:8px;padding-top:8px">
+        <div class="cubebox sm" id="cubeMount"></div>
+        <button class="btn" data-act="qReplay">${ic('replay', 20)}Ver de nuevo</button></div>
+      <div class="qopts">${opts}</div>
+      ${q.answered && q.answered !== m ? `<p class="small center" style="color:#EBEBF5">Era <b>${pretty(m)}</b>. ${esc(L.MOVE_INFO[L.parseMove(m).base][1])} <span class="muted">${esc(L.suffixText(m.slice(L.parseMove(m).base.length)))}</span></p><button class="btn primary" data-act="next">Siguiente</button>`
+        : `<p class="muted small center">Fíjate en qué cara se mueve y hacia dónde, mirándola de frente.</p>`}
+    </div>`;
+  }
+  return `<div class="screen" style="gap:14px">${head}
+    <h1>Hazlo en tu cubo</h1>
+    <div class="card" style="align-items:center;gap:6px">
+      <b class="bigmove alg" style="font-size:88px">${pretty(m)}</b>
+      <span class="muted">${esc(L.MOVE_INFO[L.parseMove(m).base][0])}</span></div>
+    ${q.revealed ? `<div class="card" style="gap:8px;padding-top:8px"><div class="cubebox sm" id="cubeMount"></div>
+        <button class="btn" data-act="qReplay">${ic('replay', 20)}Ver de nuevo</button></div>
+      <div class="grid2"><button class="btn" style="color:var(--red)" data-act="selfGrade" data-v="0">${ic('x', 20)}Me equivoqué</button>
+        <button class="btn primary" style="min-height:48px" data-act="selfGrade" data-v="1">${ic('check', 20, 2.2)}Me salió</button></div>`
+      : `<p class="muted small center">Parte con el cubo armado, amarillo arriba y verde al frente.</p>
+         <button class="btn primary" data-act="reveal">Mostrar cómo es</button>`}
+  </div>`;
+}
+
+function viewTrain() {
+  const last = db.quizzes[db.quizzes.length - 1];
+  const soon = (ab, col, name, sub) => `<div class="li" aria-disabled="true"><span class="badge off">${ab}</span><span class="grow" style="gap:2px"><span style="font-weight:600;color:var(--muted)">${name}</span><span class="sub">${sub} · próxima versión</span></span></div>`;
+  return `<div class="screen">
+    <p class="eyebrow">CFOP Trainer</p>
+    <h1>Entrenar</h1>
+    <div class="card">
+      <p class="eyebrow">Notación</p>
+      <div class="row"><div class="col"><h2 class="num">${masteredCount()} de 18</h2><span class="muted small">giros de caras dominados${last ? ` · última ronda ${last.ok}/${last.total}` : ''}</span></div></div>
+      <button class="btn primary" data-act="go" data-v="quiz">Practicar notación</button>
+    </div>
+    <p class="eyebrow">Por etapa</p>
+    <div class="list">
+      ${soon('+', '#fff', 'Cross', 'Mezcla real, inspección y solución más corta')}
+      ${soon('F2L', '#30D158', 'F2L', 'Casos con repetición espaciada')}
+      ${soon('OLL', '#FFD60A', 'OLL', 'Primero en 2 pasos')}
+      ${soon('PLL', '#FF9F0A', 'PLL', 'Primero en 2 pasos')}
+    </div>
+    <button class="btn tint" data-act="tab" data-v="crono">${ic('timer', 20)}Ir al cronómetro</button>
+  </div>${tabbar()}`;
+}
+
+function viewCrono() {
+  const sv = db.solves;
+  const last = sv[0];
+  const best = L.bestOf(sv), a5 = L.avgOf(sv, 5), a12 = L.avgOf(sv, 12);
+  const t = ui.timer;
+  const phase = t ? t.phase : 'idle';
+  const shown = last && !t ? L.fmtSolve(last) : '0,00';
+  const list = sv.slice(0, 100).map(s => {
+    const isBest = best !== null && L.effTime(s) === best;
+    return `<button class="li" data-act="solve" data-v="${s.id}" style="min-height:48px"><span class="num" style="font-weight:600;${isBest ? 'color:var(--gold)' : ''}">${L.fmtSolve(s)}</span><span class="grow"></span><span class="sub">${esc(relDate(s.at))}</span></button>`;
+  }).join('');
+  return `<div class="screen" style="gap:14px">
+    <p class="eyebrow">CFOP Trainer</p>
+    <h1>Cronómetro</h1>
+    <div class="card" style="gap:8px">
+      <div class="row"><p class="eyebrow">Mezcla</p><button class="btn ghost" style="min-height:36px;font-size:15px" data-act="newScr">${ic('shuffle', 18)}Otra</button></div>
+      <span class="alg num scr">${pretty(ui.scr)}</span>
+      <span class="muted xs">Amarillo arriba · verde al frente</span>
+    </div>
+    <div class="timer-zone ${phase === 'hold' ? 'hold' : phase === 'ready' ? 'ready' : ''}" id="tzone" role="button" tabindex="0" aria-label="Cronómetro: mantén presionado y suelta para partir">
+      <b class="timer-big" id="tbig">${shown}</b>
+      <span class="muted small">${db.settings.inspection ? 'Toca para empezar la inspección de 15 s' : 'Mantén el dedo aquí y suelta para partir'}</span>
+    </div>
+    ${last ? `<div class="row" style="justify-content:center;gap:8px">
+      <button class="btn sm" data-act="lastPen" data-v="2" aria-pressed="${last.penalty === 2}" style="${last.penalty === 2 ? 'background:#fff;color:#000' : ''}">+2</button>
+      <button class="btn sm" data-act="lastPen" data-v="dnf" aria-pressed="${last.penalty === 'dnf'}" style="${last.penalty === 'dnf' ? 'background:#fff;color:#000' : ''}">DNF</button>
+      <button class="btn sm" data-act="solve" data-v="${last.id}">Detalle</button></div>` : ''}
+    <div class="grid3">
+      <div class="stat"><span>Mejor</span><b class="num" style="${best !== null ? 'color:var(--gold)' : ''}">${best === null ? '—' : L.fmtTime(best)}</b></div>
+      <div class="stat"><span>Prom. 5</span><b class="num">${a5 === null ? '—' : L.fmtTime(a5)}</b></div>
+      <div class="stat"><span>Prom. 12</span><b class="num">${a12 === null ? '—' : L.fmtTime(a12)}</b></div>
+    </div>
+    ${sv.length ? `<div class="row"><p class="eyebrow">Armadas</p><span class="sub num">${sv.length}</span></div><div class="list">${list}</div>` : `<p class="muted small center">Aquí aparecerán tus tiempos.</p>`}
+  </div>${tabbar()}`;
+}
+
+function viewSettings() {
+  const s = db.settings;
+  return `<div class="screen">
+    <p class="eyebrow">CFOP Trainer</p>
+    <h1>Ajustes</h1>
+    <div class="list">
+      <label class="li"><span class="grow"><span>Inspección de 15 s</span><span class="sub">En el cronómetro, como en competencias</span></span><input type="checkbox" class="switch" data-ch="insp" ${s.inspection ? 'checked' : ''} aria-label="Inspección de 15 segundos"></label>
+      <div class="li" style="flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px"><span>Velocidad de las animaciones</span>
+        <div class="seg" role="group" aria-label="Velocidad">${[[0.6, 'Lenta'], [1, 'Normal'], [1.6, 'Rápida']].map(([v, l]) => `<button class="${s.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${l}</button>`).join('')}</div></div>
+    </div>
+    <p class="eyebrow">Respaldo</p>
+    <div class="list">
+      <button class="li" data-act="export"><span class="grow"><span>Exportar respaldo</span><span class="sub">Archivo con todo tu avance y tus tiempos</span></span><span class="chev">${ic('up', 20)}</span></button>
+      <label class="li" style="cursor:pointer"><span class="grow"><span>Importar respaldo</span><span class="sub">Reemplaza los datos de este teléfono</span></span><span class="chev">${ic('down', 20)}</span><input type="file" accept="application/json,.json" data-ch="import" style="display:none"></label>
+      <button class="li" data-act="csv"><span class="grow"><span>Exportar tiempos a Excel</span><span class="sub">CSV con fecha, tiempo, penalización y mezcla</span></span><span class="chev">${ic('up', 20)}</span></button>
+    </div>
+    <div class="list">
+      <button class="li" data-act="wipeTimes" style="color:var(--red)">Borrar tiempos</button>
+      <button class="li" data-act="wipeAll" style="color:var(--red)">Borrar todos los datos</button>
+    </div>
+    <p class="muted small center">CFOP Trainer · versión ${VERSION}<br>Tus datos se guardan solo en este teléfono.</p>
+  </div>${tabbar()}`;
+}
+
+// ---------- render
+function screenKey() { return ui.tab + '/' + (ui.sub || ''); }
+function render(animate = false, dir = null) {
+  let html;
+  if (ui.sub === 'nota') html = viewNotation();
+  else if (ui.sub === 'quiz') html = viewQuiz();
+  else if (ui.tab === 'aprender') html = viewHome();
+  else if (ui.tab === 'entrenar') html = viewTrain();
+  else if (ui.tab === 'crono') html = viewCrono();
+  else html = viewSettings();
+  const app = $('#app');
+  app.innerHTML = html;
+  const key = screenKey();
+  if (animate && key !== lastScreenKey && !document.startViewTransition) {
+    const first = app.firstElementChild;
+    if (first) first.classList.add(dir === 'push' ? 'anim-push' : dir === 'pop' ? 'anim-pop' : 'anim-fade');
+  }
+  lastScreenKey = key;
+  const mount = $('#cubeMount');
+  if (mount) mount.prepend(getCube().el);
+}
+
+// ---------- acciones
+function playNotation() {
+  const c = getCube();
+  c.reset();
+  setTimeout(() => c.play(ui.nota.move + ui.nota.suf), 120);
+}
+function quizShow() {
+  const q = ui.quiz; if (!q) return;
+  const c = getCube(); c.reset(); c.resetView();
+  setTimeout(() => c.play(q.qs[q.i]), 250);
+}
+function nextQuestion() {
+  const q = ui.quiz;
+  q.i++;
+  if (q.i >= q.qs.length) {
+    db.quizzes.push({ at: Date.now(), mode: q.mode, total: q.qs.length, ok: q.ok });
+    if (db.quizzes.length > 200) db.quizzes = db.quizzes.slice(-200);
+    save();
+    render();
+    return;
+  }
+  prepQuestion();
+  render();
+  if (q.mode === 'ver') quizShow();
+}
+
+const actions = {
+  tab: el => setTab(el.dataset.v),
+  go: el => {
+    const v = el.dataset.v;
+    if (v === 'quiz') ui.quiz = null;
+    go(v);
+    if (v === 'nota') setTimeout(playNotation, 450);
+  },
+  back: () => {
+    if (ui.sub === 'quiz' && ui.quiz && ui.quiz.i < ui.quiz.qs.length && ui.quiz.i > 0) {
+      ask({ title: '¿Salir de la práctica?', text: 'Lo que respondiste ya quedó guardado.', buttons: [{ label: 'Salir', kind: 'primary', val: 1 }, { label: 'Seguir practicando', val: 0 }] })
+        .then(v => { if (v) back(ui.sub === 'quiz' && ui.from === 'nota' ? 'nota' : null); });
+      return;
+    }
+    const to = ui.sub === 'quiz' && ui.from === 'nota' ? 'nota' : null;
+    if (to === 'nota') ui.from = null;
+    back(to);
+  },
+  pickMove: el => { ui.nota.move = el.dataset.v; render(); playNotation(); },
+  pickSuf: el => { ui.nota.suf = el.dataset.v; render(); playNotation(); },
+  replay: () => playNotation(),
+  cfg: el => { const k = el.dataset.k; ui.quizCfg[k] = k === 'n' ? +el.dataset.v : el.dataset.v; render(); },
+  startQuiz: () => { startQuiz(); render(); if (ui.quiz.mode === 'ver') quizShow(); },
+  quizSetup: () => { ui.quiz = null; render(); },
+  qReplay: () => quizShow(),
+  answer: el => {
+    const q = ui.quiz; if (!q || q.answered) return;
+    const m = q.qs[q.i], a = el.dataset.v, ok = a === m;
+    q.answered = a; if (ok) q.ok++; else q.wrong.push(m);
+    recordAnswer(m, ok);
+    render();
+    if (ok) setTimeout(() => { if (ui.quiz === q && q.answered) nextQuestion(); }, 650);
+  },
+  next: () => nextQuestion(),
+  reveal: () => { ui.quiz.revealed = true; render(); quizShow(); },
+  selfGrade: el => {
+    const q = ui.quiz, m = q.qs[q.i], ok = el.dataset.v === '1';
+    if (ok) q.ok++; else q.wrong.push(m);
+    recordAnswer(m, ok);
+    nextQuestion();
+  },
+  study: el => {
+    const m = L.parseMove(el.dataset.v);
+    ui.nota.move = m.base; ui.nota.suf = m.turns === -1 ? "'" : m.turns === 2 ? '2' : '';
+    ui.quiz = null; ui.from = 'quiz';
+    nav(() => { ui.sub = 'nota'; window.scrollTo(0, 0); }, 'push');
+    setTimeout(playNotation, 450);
+  },
+  newScr: () => { ui.scr = L.scramble(); render(); },
+  solve: el => { ui.sheet = { kind: 'solve', id: el.dataset.v }; renderSheet(); },
+  lastPen: el => {
+    const s = db.solves[0]; if (!s) return;
+    const v = el.dataset.v === 'dnf' ? 'dnf' : 2;
+    s.penalty = s.penalty === v ? 0 : v; save(); render();
+  },
+  pen: el => {
+    const s = db.solves.find(x => x.id === ui.sheet.id); if (!s) return;
+    const v = el.dataset.v; s.penalty = v === 'dnf' ? 'dnf' : v === '2' ? 2 : 0;
+    save(); renderSheet(); render();
+  },
+  delSolve: () => {
+    const id = ui.sheet.id;
+    closeSheet();
+    setTimeout(() => ask({ title: '¿Borrar este tiempo?', text: 'No se puede deshacer.', buttons: [{ label: 'Borrar', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] })
+      .then(v => { if (v) { db.solves = db.solves.filter(x => x.id !== id); save(); render(); toast('Tiempo borrado'); } }), 230);
+  },
+  closeSheet: () => closeSheet(null),
+  ask: el => { const b = ui.sheet.buttons[+el.dataset.i]; closeSheet(b.val); },
+  speed: el => { db.settings.speed = +el.dataset.v; save(); if (cube) cube.speed = db.settings.speed; render(); },
+  export: () => exportFile(`cfop-trainer-respaldo-${dateTag()}.json`, JSON.stringify(db, null, 1), 'application/json'),
+  csv: () => {
+    if (!db.solves.length) { toast('Aún no hay tiempos'); return; }
+    const rows = [['Fecha', 'Hora', 'Tiempo (s)', 'Penalización', 'Tiempo final', 'Mezcla']];
+    for (const s of [...db.solves].reverse()) {
+      const d = new Date(s.at);
+      rows.push([d.toLocaleDateString('es-CL'), d.toLocaleTimeString('es-CL'), (s.ms / 1000).toFixed(2).replace('.', ','),
+        s.penalty === 'dnf' ? 'DNF' : s.penalty === 2 ? '+2' : '', L.fmtSolve(s), s.scr]);
+    }
+    const csv = '﻿' + rows.map(r => r.map(c => /[;"\n]/.test(c) ? `"${String(c).replace(/"/g, '""')}"` : c).join(';')).join('\r\n');
+    exportFile(`cfop-trainer-tiempos-${dateTag()}.csv`, csv, 'text/csv');
+  },
+  wipeTimes: async () => {
+    const n = db.solves.length;
+    if (!n) { toast('No hay tiempos guardados'); return; }
+    const v = await ask({ title: '¿Borrar todos los tiempos?', text: `Se borrarán ${n} ${n === 1 ? 'tiempo' : 'tiempos'}. Tu avance en notación se mantiene.`, buttons: [{ label: 'Borrar tiempos', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    if (!v) return;
+    db.solves = []; save(); render(); toast('Tiempos borrados');
+  },
+  wipeAll: async () => {
+    const v = await ask({ title: '¿Borrar todos los datos?', text: 'Se borra tu avance, tus prácticas y tus tiempos de este teléfono.', buttons: [{ label: 'Exportar respaldo primero', kind: 'primary', val: 'exp' }, { label: 'Borrar todo', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    if (v === 'exp') { actions.export(); return; }
+    if (!v) return;
+    const v2 = await ask({ title: '¿Seguro?', text: `Se perderán ${db.solves.length} tiempos y el avance de ${Object.keys(db.notation).length} giros. No se puede deshacer.`, buttons: [{ label: 'Sí, borrar todo', kind: 'danger', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    if (!v2) return;
+    db = defaultDb(); save(); render(); toast('Datos borrados');
+  },
+};
+
+function dateTag() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+async function exportFile(name, text, type) {
+  const blob = new Blob([text], { type });
+  try {
+    const file = new File([blob], name, { type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function importFile(input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || d.v !== 1) throw new Error('formato');
+    const nd = normalize(d);
+    const v = await ask({ title: '¿Importar este respaldo?', text: `Trae ${nd.solves.length} tiempos y el avance de ${Object.keys(nd.notation).length} giros. Reemplaza lo que hay en este teléfono.`, buttons: [{ label: 'Importar', kind: 'primary', val: 1 }, { label: 'Cancelar', val: 0 }] });
+    if (v) { db = nd; save(); render(); toast('Respaldo importado'); }
+  } catch (_) { toast('Ese archivo no es un respaldo válido'); }
+  input.value = '';
+}
+
+// ---------- cronómetro
+let raf = null;
+function timerOverlay() {
+  let el = $('#tfull');
+  if (!el) { el = document.createElement('div'); el.id = 'tfull'; el.className = 'timer-full'; el.setAttribute('role', 'timer'); document.body.appendChild(el); }
+  return el;
+}
+function paintOverlay() {
+  const t = ui.timer, el = timerOverlay();
+  el.className = 'timer-full ' + (t.phase === 'insp' ? (t.hold ? (t.ready ? 'ready' : 'hold') : 'insp') : t.phase === 'hold' ? 'hold' : t.phase === 'ready' ? 'ready' : '');
+  let big = '', hint = '';
+  if (t.phase === 'insp') {
+    const left = 15 - Math.floor((performance.now() - t.inspStart) / 1000);
+    big = left > 0 ? String(left) : left > -2 ? '+2' : 'DNF';
+    hint = t.hold ? (t.ready ? 'Suelta para partir' : 'Mantén…') : 'Inspección · mantén el dedo y suelta para partir';
+  } else if (t.phase === 'run') {
+    big = L.fmtTime(performance.now() - t.start);
+    hint = 'Toca para detener';
+  }
+  el.innerHTML = `<b class="timer-big">${big}</b><span class="muted small">${hint}</span>`;
+}
+function loop() {
+  if (!ui.timer || (ui.timer.phase !== 'run' && ui.timer.phase !== 'insp')) { raf = null; return; }
+  paintOverlay();
+  raf = requestAnimationFrame(loop);
+}
+function removeOverlay() { const el = $('#tfull'); if (el) el.remove(); }
+function startRun() {
+  const t = ui.timer;
+  let penalty = 0;
+  if (t.inspStart) {
+    const used = (performance.now() - t.inspStart) / 1000;
+    penalty = used > 17 ? 'dnf' : used > 15 ? 2 : 0;
+  }
+  ui.timer = { phase: 'run', start: performance.now(), penalty };
+  paintOverlay();
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+function stopRun() {
+  const t = ui.timer;
+  const ms = Math.round(performance.now() - t.start);
+  db.solves.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ms, penalty: t.penalty, scr: ui.scr, at: Date.now() });
+  save();
+  ui.timer = null; ui.scr = L.scramble();
+  removeOverlay(); render();
+  const prevBest = L.bestOf(db.solves.slice(1));
+  if (db.solves.length > 1 && t.penalty !== 'dnf' && (prevBest === null || L.effTime(db.solves[0]) < prevBest)) toast('¡Nuevo mejor tiempo!');
+}
+const HOLD_MS = 350;
+function timerDown(e) {
+  const t = ui.timer;
+  if (t && t.phase === 'run') { e.preventDefault(); suppressClickUntil = Date.now() + 400; stopRun(); return; }
+  if (t && t.phase === 'insp') {
+    e.preventDefault();
+    t.hold = true; t.ready = false;
+    clearTimeout(t.holdTimer);
+    t.holdTimer = setTimeout(() => { if (ui.timer === t && t.hold) { t.ready = true; paintOverlay(); } }, HOLD_MS);
+    paintOverlay();
+    return;
+  }
+  if (!e.target.closest('#tzone')) return;
+  e.preventDefault();
+  if (db.settings.inspection) { ui.timer = { phase: 'armInsp' }; return; }
+  ui.timer = { phase: 'hold' };
+  const z = $('#tzone'); z.classList.add('hold');
+  const me = ui.timer;
+  me.holdTimer = setTimeout(() => { if (ui.timer === me) { me.phase = 'ready'; z.classList.remove('hold'); z.classList.add('ready'); } }, HOLD_MS);
+}
+function timerUp(e) {
+  const t = ui.timer; if (!t) return;
+  if (t.phase === 'armInsp') {
+    ui.timer = { phase: 'insp', inspStart: performance.now(), hold: false };
+    paintOverlay(); if (!raf) raf = requestAnimationFrame(loop);
+    return;
+  }
+  if (t.phase === 'insp') {
+    clearTimeout(t.holdTimer);
+    if (t.ready) { const st = t.inspStart; startRunFromInsp(st); }
+    else { t.hold = false; paintOverlay(); }
+    return;
+  }
+  if (t.phase === 'hold') { clearTimeout(t.holdTimer); ui.timer = null; const z = $('#tzone'); if (z) z.classList.remove('hold'); return; }
+  if (t.phase === 'ready') { ui.timer = { phase: 'ready' }; timerOverlay(); startRun(); }
+}
+function startRunFromInsp(inspStart) { ui.timer.inspStart = inspStart; startRun(); }
+
+// ---------- eventos
+let suppressClickUntil = 0;
+document.addEventListener('click', e => {
+  if (Date.now() < suppressClickUntil) { e.preventDefault(); e.stopPropagation(); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const fn = actions[el.dataset.act];
+  if (fn) { e.preventDefault(); fn(el, e); }
+});
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-ch]'); if (!el) return;
+  if (el.dataset.ch === 'insp') { db.settings.inspection = el.checked; save(); }
+  if (el.dataset.ch === 'import') importFile(el);
+});
+document.addEventListener('pointerdown', e => {
+  if (ui.tab === 'crono' && !ui.sub && !ui.sheet) timerDown(e);
+}, { passive: false });
+document.addEventListener('pointerup', e => { if (ui.tab === 'crono' && !ui.sub) timerUp(e); });
+document.addEventListener('pointercancel', e => {
+  const t = ui.timer;
+  if (t && (t.phase === 'hold' || t.phase === 'ready' || t.phase === 'armInsp')) { ui.timer = null; render(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || ui.tab !== 'crono' || ui.sub) return;
+  e.preventDefault();
+  if (ui.timer && ui.timer.phase === 'run') { stopRun(); return; }
+  if (!e.repeat && !ui.timer) { ui.timer = { phase: 'ready' }; timerOverlay(); startRun(); }
+});
+
+// respuesta al tocar
+const PRESS = '.btn,.iconbtn,.chip,.tabbar button,.li,.seg button';
+let pressed = null, px = 0, py = 0;
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest(PRESS);
+  if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  pressed = el; px = e.clientX; py = e.clientY; el.classList.add('pressed');
+});
+document.addEventListener('pointermove', e => {
+  if (pressed && Math.hypot(e.clientX - px, e.clientY - py) > 10) { pressed.classList.remove('pressed'); pressed = null; }
+});
+const release = () => { if (pressed) { pressed.classList.remove('pressed'); pressed = null; } };
+document.addEventListener('pointerup', release);
+document.addEventListener('pointercancel', release);
+
+// arranque
+render();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+</script>
+</body>
+</html>
