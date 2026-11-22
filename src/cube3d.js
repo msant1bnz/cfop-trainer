@@ -138,8 +138,8 @@ class Cube3D {
   }
 
   // Reproduce un algoritmo; onStep(i) se llama antes de cada movimiento.
-  // En secuencias, cada movimiento parte 0,5 s después del anterior (a velocidad normal).
-  async play(alg, onStep, interval = 500) {
+  // En secuencias, cada movimiento parte 1,25 s después del anterior (a velocidad normal).
+  async play(alg, onStep, interval = 1250) {
     const token = ++this.token;
     this.resetTransforms();
     const moves = typeof alg === 'string' ? Logic.parseAlg(alg) : alg;
