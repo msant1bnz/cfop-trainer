@@ -1,6 +1,6 @@
 // CFOP Trainer — interfaz
 const L = Logic;
-const VERSION = '2.0';
+const VERSION = '2.0.1';
 const STORE = 'cfop.v1';
 
 // ---------- datos

@@ -978,16 +978,21 @@ class Cube3D {
     });
   }
 
-  // Reproduce un algoritmo; onStep(i) se llama antes de cada movimiento
-  async play(alg, onStep, gap = 90) {
+  // Reproduce un algoritmo; onStep(i) se llama antes de cada movimiento.
+  // En secuencias, cada movimiento parte 0,5 s después del anterior (a velocidad normal).
+  async play(alg, onStep, interval = 500) {
     const token = ++this.token;
     this.resetTransforms();
     const moves = typeof alg === 'string' ? Logic.parseAlg(alg) : alg;
     for (let i = 0; i < moves.length; i++) {
       if (onStep) onStep(i);
+      const t0 = performance.now();
       const ok = await this.animateMove(moves[i], token);
       if (!ok) return false;
-      if (gap && i < moves.length - 1) await new Promise(r => setTimeout(r, gap / this.speed));
+      if (i < moves.length - 1) {
+        const wait = interval / this.speed - (performance.now() - t0);
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      }
       if (token !== this.token) return false;
     }
     if (onStep) onStep(moves.length);
@@ -1383,7 +1388,7 @@ const actions2 = {
 
 // CFOP Trainer — interfaz
 const L = Logic;
-const VERSION = '2.0';
+const VERSION = '2.0.1';
 const STORE = 'cfop.v1';
 
 // ---------- datos
